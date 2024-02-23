@@ -3,6 +3,8 @@ import os
 
 src_logger = logging.getLogger(__name__)
 
+os.makedirs('log', exist_ok=True)
+
 
 class PackagePathFilter(logging.Filter):
     def filter(self, record):
