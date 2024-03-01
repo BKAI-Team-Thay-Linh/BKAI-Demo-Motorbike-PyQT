@@ -46,7 +46,7 @@ class Models(torch.nn.Module):
 
     def infer(self, image: Image) -> int:
         img_np = np.array(image.convert('RGB'))
-        img = Transform()(img_np)
+        img = Transform()(img_np).to(self.device)
 
         with torch.no_grad():
             pred = self(img.unsqueeze(0))
