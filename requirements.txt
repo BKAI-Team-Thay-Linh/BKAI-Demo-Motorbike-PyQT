@@ -5,3 +5,4 @@ pyinstaller==6.1.0
 pyqt6-tools
 ultralytics
 albumentations
+tensorflow
