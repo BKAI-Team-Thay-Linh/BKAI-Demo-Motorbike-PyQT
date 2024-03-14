@@ -1,15 +1,16 @@
 import os
 import sys
+
 sys.path.append(os.getcwd())  # NOQA
 
-from ultralytics import YOLO
-import torch
 import cv2
+import torch
+from ultralytics import YOLO
 
 
 class YoloV8:
     def __init__(self, model_path: str):
-        self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self.model = YOLO(model_path).to(self.device)
 
     def detect(self, image_path: str):
@@ -28,14 +29,16 @@ class YoloV8:
             color = (0, 255, 0)  # Green color for bounding box
             frame = cv2.rectangle(frame, (x1, y1), (x2, y2), color, 2)
             label = f"Class: {int(class_id)}, Score: {score:.2f}"
-            frame = cv2.putText(frame, label, (x1, y1 - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, color, 2)
+            frame = cv2.putText(
+                frame, label, (x1, y1 - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, color, 2
+            )
 
         return frame
 
 
-if __name__ == '__main__':
-    video_path = 'assets/test_vid.mp4'
-    model_path = 'weight/best.pt'
+if __name__ == "__main__":
+    video_path = "assets/video.mp4"
+    model_path = "weight/best_final.pt"
 
     yolo = YoloV8(model_path)
 
@@ -49,8 +52,8 @@ if __name__ == '__main__':
         bboxes, scores, class_ids = yolo.detect(frame)
         frame_with_bboxes = yolo.draw(frame, bboxes, scores, class_ids)
 
-        cv2.imshow('frame', frame_with_bboxes)
-        if cv2.waitKey(1) & 0xFF == ord('q'):
+        cv2.imshow("frame", frame_with_bboxes)
+        if cv2.waitKey(1) & 0xFF == ord("q"):
             break
 
     cap.release()
