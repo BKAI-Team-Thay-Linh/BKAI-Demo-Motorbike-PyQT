@@ -1,22 +1,23 @@
 import os
 import shutil
 import sys
+
 import numpy as np
+
 sys.path.append(os.getcwd())  # NOQA
 
 import cv2
+import ultralytics as ult
 from PIL import Image
-
 from PyQt6.QtCore import *
+
 from src.core import core_logger
+from src.models.DeepSort import DeepSort
 from src.models.Models import Models
 from src.models.YoloV8 import YoloV8
-from src.models.DeepSort import DeepSort
-import ultralytics as ult
 
 
 class ProcessVideoWorker(QObject):
-
     started = pyqtSignal()
     finished = pyqtSignal()
     logging = pyqtSignal(str)
@@ -24,13 +25,15 @@ class ProcessVideoWorker(QObject):
     set_up_progress_bar = pyqtSignal(int)
     increase_progress_bar = pyqtSignal()
 
-    def __init__(self, video_path: str, save_folder: str, parent: QObject | None = ...) -> None:
+    def __init__(
+        self, video_path: str, save_folder: str, parent: QObject | None = ...
+    ) -> None:
         super(ProcessVideoWorker, self).__init__()
         self.video_path = video_path
         self.save_folder = save_folder
 
-        self.detector = YoloV8(model_path='weight/best.pt')
-        self.tracker = DeepSort(model_path='weight/mars-small128.pb')
+        self.detector = YoloV8(model_path="weight/best_final.pt")
+        self.tracker = DeepSort(model_path="weight/mars-small128.pb")
 
     def draw_detection(
         self,
@@ -39,8 +42,8 @@ class ProcessVideoWorker(QObject):
         scores,
         class_ids,
         ids,
-        classes=['xega', 'xeso'],
-        mask_alpha=0.3
+        classes=["xega", "xeso"],
+        mask_alpha=0.3,
     ):
         height, width = img.shape[:2]
         np.random.seed(0)
@@ -48,7 +51,10 @@ class ProcessVideoWorker(QObject):
 
         #  Dynamically generate colors for each class_id
         unique_class_ids = np.unique(class_ids)
-        colors = {class_id: np.random.randint(0, 255, size=3).tolist() for class_id in unique_class_ids}
+        colors = {
+            class_id: np.random.randint(0, 255, size=3).tolist()
+            for class_id in unique_class_ids
+        }
 
         mask_img = img.copy()
         det_img = img.copy()
@@ -68,21 +74,39 @@ class ProcessVideoWorker(QObject):
 
                 # Draw fill rectangle in mask image
                 cv2.rectangle(mask_img, (x1, y1), (x2, y2), color, -1)
-                label = classes[class_id-1]
-                caption = f'{label} {int(score * 100)}% ID: {id_}'
-                (tw, th), _ = cv2.getTextSize(text=caption, fontFace=cv2.FONT_HERSHEY_SIMPLEX,
-                                              fontScale=size, thickness=text_thickness)
+                label = classes[class_id - 1]
+                caption = f"{label} {int(score * 100)}% ID: {id_}"
+                (tw, th), _ = cv2.getTextSize(
+                    text=caption,
+                    fontFace=cv2.FONT_HERSHEY_SIMPLEX,
+                    fontScale=size,
+                    thickness=text_thickness,
+                )
                 th = int(th * 1.2)
 
-                cv2.rectangle(det_img, (x1, y1),
-                              (x1 + tw, y1 - th), color, -1)
-                cv2.rectangle(mask_img, (x1, y1),
-                              (x1 + tw, y1 - th), color, -1)
-                cv2.putText(det_img, caption, (x1, y1),
-                            cv2.FONT_HERSHEY_SIMPLEX, size, (255, 255, 255), text_thickness, cv2.LINE_AA)
+                cv2.rectangle(det_img, (x1, y1), (x1 + tw, y1 - th), color, -1)
+                cv2.rectangle(mask_img, (x1, y1), (x1 + tw, y1 - th), color, -1)
+                cv2.putText(
+                    det_img,
+                    caption,
+                    (x1, y1),
+                    cv2.FONT_HERSHEY_SIMPLEX,
+                    size,
+                    (255, 255, 255),
+                    text_thickness,
+                    cv2.LINE_AA,
+                )
 
-                cv2.putText(mask_img, caption, (x1, y1),
-                            cv2.FONT_HERSHEY_SIMPLEX, size, (255, 255, 255), text_thickness, cv2.LINE_AA)
+                cv2.putText(
+                    mask_img,
+                    caption,
+                    (x1, y1),
+                    cv2.FONT_HERSHEY_SIMPLEX,
+                    size,
+                    (255, 255, 255),
+                    text_thickness,
+                    cv2.LINE_AA,
+                )
 
             else:
                 print("Class_id out of range colors")
@@ -100,10 +124,10 @@ class ProcessVideoWorker(QObject):
         width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
         height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
         fps = int(cap.get(cv2.CAP_PROP_FPS))
-        fourcc = cv2.VideoWriter_fourcc(*'MJPG')
+        fourcc = cv2.VideoWriter_fourcc(*"MJPG")
 
-        datetime_now = QDateTime.currentDateTime().toString('yyyy-MM-dd_hh-mm-ss')
-        video_path = os.path.join(self.save_folder, f'{datetime_now}.avi')
+        datetime_now = QDateTime.currentDateTime().toString("yyyy-MM-dd_hh-mm-ss")
+        video_path = os.path.join(self.save_folder, f"{datetime_now}.avi")
         out = cv2.VideoWriter(video_path, fourcc, fps, (width, height))
 
         # Get tracking results
@@ -111,7 +135,7 @@ class ProcessVideoWorker(QObject):
         tracked_ids = np.array([], dtype=np.int32)
 
         self.set_up_progress_bar.emit(int(cap.get(cv2.CAP_PROP_FRAME_COUNT)))
-        self.logging.emit(f'Processing video: {self.video_path}')
+        self.logging.emit(f"Processing video: {self.video_path}")
         while True:
             ret, frame = cap.read()
             if not ret:
@@ -119,15 +143,13 @@ class ProcessVideoWorker(QObject):
 
             self.increase_progress_bar.emit()
             core_logger.info(
-                f'Processing frame {int(cap.get(cv2.CAP_PROP_POS_FRAMES))}/{int(cap.get(cv2.CAP_PROP_FRAME_COUNT))}')
+                f"Processing frame {int(cap.get(cv2.CAP_PROP_POS_FRAMES))}/{int(cap.get(cv2.CAP_PROP_FRAME_COUNT))}"
+            )
             detector_results = self.detector.detect(frame)
             bboxes, scores, class_ids = detector_results
 
             tracker_pred = self.tracker.tracking(
-                origin_frame=frame,
-                bboxes=bboxes,
-                scores=scores,
-                class_ids=class_ids
+                origin_frame=frame, bboxes=bboxes, scores=scores, class_ids=class_ids
             )
 
             if tracker_pred.size > 0:
@@ -147,7 +169,7 @@ class ProcessVideoWorker(QObject):
                     bboxes=bboxes,
                     scores=conf_scores,
                     class_ids=class_ids,
-                    ids=track_ids
+                    ids=track_ids,
                 )
             else:
                 result_img = frame
@@ -162,6 +184,6 @@ class ProcessVideoWorker(QObject):
         self.finished.emit()
 
 
-if __name__ == '__main__':
-    worker = ProcessVideoWorker('assets/test_vid.mp4', 'assets')
+if __name__ == "__main__":
+    worker = ProcessVideoWorker("assets/test_vid.mp4", "assets")
     worker.run()
