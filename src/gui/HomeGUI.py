@@ -110,9 +110,12 @@ class HomeGUI(QMainWindow):
             # Update the input_lineEdit
             self.home_ui.output_lineEdit.setText(folder_path)
 
-    def _handle_success(self):
-        msg.information_box(
-            content=f'Video has successfully saved to path: {os.path.join(self.home_ui.output_lineEdit.text(), "annotated_video.mp4")}')
+    def _handle_success(self, output_video_path: str):
+        msg.information_box_with_button(
+            content=f'Video has successfully saved to path: {output_video_path}',
+            button_name='Open Folder',
+            button_action=lambda: os.startfile(os.path.dirname(output_video_path))
+        )
 
         # Stop the progress bar
         self.home_ui.progressBar.setValue(0)
@@ -141,7 +144,7 @@ class HomeGUI(QMainWindow):
             return
 
         # Create worker
-        self.process_video_worker = ProcessVideoWorker(input_video, output_folder, sys_config=self.system_configs, dectect_conf=self.home_ui.conf_slide.value() / 100)
+        self.process_video_worker = ProcessVideoWorker(video_path=input_video, save_folder=output_folder, sys_config=self.system_configs, dectect_conf=self.home_ui.conf_slide.value() / 100)
         self.process_video_worker.moveToThread(self.process_video_thread)
 
         self.process_video_thread.started.connect(self.process_video_worker.run)
@@ -154,6 +157,7 @@ class HomeGUI(QMainWindow):
         self.process_video_worker.logging.connect(self.update_log)
         self.process_video_worker.set_up_progress_bar.connect(self._set_up_progress_bar)
         self.process_video_worker.increase_progress_bar.connect(self._increase_progress_bar)
+        self.process_video_worker.reset_progress_bar.connect(self.home_ui.progressBar.reset)
 
         # Start the thread
         self.process_video_thread.start()

@@ -27,7 +27,7 @@ class DeepSort:
         self.tracker = Tracker(self.metric)
         
         # Reduce the max_age to 20
-        self.tracker.max_age = 20
+        self.tracker.max_age = 25
 
         key_list = []  # list of keys
         val_list = []  # list of values

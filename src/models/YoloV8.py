@@ -49,7 +49,7 @@ if __name__ == "__main__":
         if not ret:
             break
 
-        bboxes, scores, class_ids = yolo.detect(frame)
+        bboxes, scores, class_ids = yolo.detect(frame=frame, conf=0.5)
         frame_with_bboxes = yolo.draw(frame, bboxes, scores, class_ids)
 
         cv2.imshow("frame", frame_with_bboxes)
