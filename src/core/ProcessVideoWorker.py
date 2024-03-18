@@ -28,6 +28,7 @@ class ProcessVideoWorker(QObject):
         self.save_folder = save_folder
         self.sys_config = sys_config
         self.detect_conf = dectect_conf
+        print(f"==>> detect_conf: {self.detect_conf}")
 
         self.detector = YoloV8(model_path=sys_config['yolo_model_path'])
         self.tracker = DeepSort(model_path=sys_config['deepsort_model_path'])
