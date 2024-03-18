@@ -10,11 +10,11 @@ from ultralytics import YOLO
 
 class YoloV8:
     def __init__(self, model_path: str):
-        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-        self.model = YOLO(model_path).to(self.device)
-
-    def detect(self, image_path: str):
-        results = self.model.predict(image_path, verbose=False)[0]
+        self.model = YOLO(model_path).to('cpu')
+        # self.model.eval()
+        
+    def detect(self, conf: float, frame):
+        results = self.model.predict(frame, verbose=False, conf=conf)[0]
         bboxes = results.boxes.xywh.cpu().numpy()
         bboxes[:, :2] -= bboxes[:, 2:] / 2  # xywh to xyxy
         scores = results.boxes.conf.cpu().numpy()
@@ -37,8 +37,8 @@ class YoloV8:
 
 
 if __name__ == "__main__":
-    video_path = "assets/video.mp4"
-    model_path = "weight/best_final.pt"
+    video_path = "assets/rtsp___Cam26hc.cameraddns.net_556_Streaming_Channels_1 - VLC media player 2023-12-15 09-11-15.mp4"
+    model_path = "weight/yolov8n.pt"
 
     yolo = YoloV8(model_path)
 

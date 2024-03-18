@@ -1,11 +1,12 @@
 import json
 import os
 import sys
+import torch
 sys.path.append(os.getcwd())  # NOQA
 
-from PyQt6.QtCore import *
-from PyQt6.QtWidgets import *
-from PyQt6.QtGui import *
+from PyQt6.QtWidgets import QMainWindow, QFileDialog, QMessageBox
+from PyQt6.QtCore import QThread, QDateTime
+
 
 from src.gui import gui_logger
 from src.gui.MessageBox import MessageBox as msg
@@ -26,6 +27,7 @@ class HomeGUI(QMainWindow):
         self.home_ui.input_button.clicked.connect(self.choose_input_video)
         self.home_ui.output_button.clicked.connect(self.choose_export_folder)
         self.home_ui.process_button.clicked.connect(self.run_process_video)
+        self.home_ui.conf_slide.valueChanged.connect(lambda value: self.home_ui.conf_label.setText(f'{round(value,2)} %'))
 
         # Thread
         self.process_video_thread = QThread()
@@ -34,6 +36,13 @@ class HomeGUI(QMainWindow):
         with open('data/configs/system.json', 'r', encoding='utf-8') as file:
             self.system_configs = json.load(file)
             gui_logger.info('System Configs Loaded')
+            
+        # Set the detect confidence for the slider
+        self.home_ui.conf_slide.setValue(int(float(self.system_configs['detect_confidence']) * 100))
+        self.home_ui.conf_label.setText(f'{self.home_ui.conf_slide.value()} %')
+        
+        # Set the device name
+        self.home_ui.device_label.setText(self._get_device())
 
     def _get_open_dir(self) -> str:
         # Get the last visited folder from system configs
@@ -47,6 +56,26 @@ class HomeGUI(QMainWindow):
 
         return open_dir
 
+    def _get_device(self) -> str:
+        if torch.cuda.is_available():
+            device_name = torch.cuda.get_device_name(0)
+        else:
+            device_name = 'CPU'
+            
+        return f'Device: {device_name.upper()}'
+    
+    def update_log(self, text: str, color: str = 'black'):
+        # Get the current date and time in a user-friendly selfat
+        current_datetime = QDateTime.currentDateTime().toString('yyyy-MM-dd hh:mm:ss')
+        # Prepare the log entry with the selfatted date and time
+        new_log = f'[{current_datetime}] {text}'
+        # Apply appropriate HTML selfatting
+        selfatted_log = f'<p style="color:{color}; margin: 0;">{new_log}</p>'
+        # Append the selfatted log entry to the log output
+        self.home_ui.log_area.setHtml(self.home_ui.log_area.toHtml() + selfatted_log)
+        # Scroll to the bottom of the log output
+        self.home_ui.log_area.verticalScrollBar().setValue(self.home_ui.log_area.verticalScrollBar().maximum())
+    
     def choose_input_video(self):
         open_dir = self._get_open_dir()
 
@@ -88,17 +117,11 @@ class HomeGUI(QMainWindow):
         # Stop the progress bar
         self.home_ui.progressBar.setValue(0)
 
-        # Reset the log label
-        self.home_ui.log_label.setText('Click the process button to start')
-
     def _set_up_progress_bar(self, total: int):
         self.home_ui.progressBar.setMaximum(total)
 
     def _increase_progress_bar(self):
         self.home_ui.progressBar.setValue(self.home_ui.progressBar.value() + 1)
-
-    def _update_logging(self, message: str):
-        self.home_ui.log_label.setText(message)
 
     def run_process_video(self):
         input_video = self.home_ui.input_lineEdit.text()
@@ -118,7 +141,7 @@ class HomeGUI(QMainWindow):
             return
 
         # Create worker
-        self.process_video_worker = ProcessVideoWorker(input_video, output_folder)
+        self.process_video_worker = ProcessVideoWorker(input_video, output_folder, sys_config=self.system_configs, dectect_conf=self.home_ui.conf_slide.value() / 100)
         self.process_video_worker.moveToThread(self.process_video_thread)
 
         self.process_video_thread.started.connect(self.process_video_worker.run)
@@ -128,7 +151,7 @@ class HomeGUI(QMainWindow):
         self.process_video_worker.finished.connect(self._handle_success)
 
         # Connect signals
-        self.process_video_worker.logging.connect(self._update_logging)
+        self.process_video_worker.logging.connect(self.update_log)
         self.process_video_worker.set_up_progress_bar.connect(self._set_up_progress_bar)
         self.process_video_worker.increase_progress_bar.connect(self._increase_progress_bar)
 

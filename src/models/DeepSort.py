@@ -25,6 +25,9 @@ class DeepSort:
             "cosine", max_cosine_distance, nn_budget
         )
         self.tracker = Tracker(self.metric)
+        
+        # Reduce the max_age to 20
+        self.tracker.max_age = 20
 
         key_list = []  # list of keys
         val_list = []  # list of values

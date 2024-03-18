@@ -7,33 +7,30 @@ import numpy as np
 sys.path.append(os.getcwd())  # NOQA
 
 import cv2
-import ultralytics as ult
-from PIL import Image
 from PyQt6.QtCore import *
 
 from src.core import core_logger
 from src.models.DeepSort import DeepSort
-from src.models.Models import Models
 from src.models.YoloV8 import YoloV8
 
 
 class ProcessVideoWorker(QObject):
     started = pyqtSignal()
     finished = pyqtSignal()
-    logging = pyqtSignal(str)
+    logging = pyqtSignal(str, str)
     error = pyqtSignal(str)
     set_up_progress_bar = pyqtSignal(int)
     increase_progress_bar = pyqtSignal()
 
-    def __init__(
-        self, video_path: str, save_folder: str, parent: QObject | None = ...
-    ) -> None:
+    def __init__(self, video_path: str, save_folder: str, sys_config: dict, dectect_conf: float = 0.5, parent: QObject | None = ...) -> None:
         super(ProcessVideoWorker, self).__init__()
         self.video_path = video_path
         self.save_folder = save_folder
+        self.sys_config = sys_config
+        self.detect_conf = dectect_conf
 
-        self.detector = YoloV8(model_path="weight/best_final.pt")
-        self.tracker = DeepSort(model_path="weight/mars-small128.pb")
+        self.detector = YoloV8(model_path=sys_config['yolo_model_path'])
+        self.tracker = DeepSort(model_path=sys_config['deepsort_model_path'])
 
     def draw_detection(
         self,
@@ -75,7 +72,7 @@ class ProcessVideoWorker(QObject):
                 # Draw fill rectangle in mask image
                 cv2.rectangle(mask_img, (x1, y1), (x2, y2), color, -1)
                 label = classes[class_id - 1]
-                caption = f"{label} {int(score * 100)}% ID: {id_}"
+                caption = f"{label} ID: {id_}"
                 (tw, th), _ = cv2.getTextSize(
                     text=caption,
                     fontFace=cv2.FONT_HERSHEY_SIMPLEX,
@@ -135,17 +132,18 @@ class ProcessVideoWorker(QObject):
         tracked_ids = np.array([], dtype=np.int32)
 
         self.set_up_progress_bar.emit(int(cap.get(cv2.CAP_PROP_FRAME_COUNT)))
-        self.logging.emit(f"Processing video: {self.video_path}")
+        self.logging.emit(f"Processing video: {os.path.basename(self.video_path)}", "blue")
         while True:
             ret, frame = cap.read()
             if not ret:
                 break
 
             self.increase_progress_bar.emit()
+            self.logging.emit(f"Processing frame {int(cap.get(cv2.CAP_PROP_POS_FRAMES))}/{int(cap.get(cv2.CAP_PROP_FRAME_COUNT))}", "black")
             core_logger.info(
                 f"Processing frame {int(cap.get(cv2.CAP_PROP_POS_FRAMES))}/{int(cap.get(cv2.CAP_PROP_FRAME_COUNT))}"
-            )
-            detector_results = self.detector.detect(frame)
+            )                   
+            detector_results = self.detector.detect(conf=self.detect_conf, frame=frame)
             bboxes, scores, class_ids = detector_results
 
             tracker_pred = self.tracker.tracking(
@@ -181,6 +179,7 @@ class ProcessVideoWorker(QObject):
         cap.release()
         out.release()
 
+        self.logging.emit(f"Video has been saved to {video_path}", "green")
         self.finished.emit()
 
 

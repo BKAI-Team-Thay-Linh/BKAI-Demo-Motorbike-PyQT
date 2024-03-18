@@ -2,9 +2,7 @@ import os
 import sys
 sys.path.append(os.getcwd())  # NOQA
 
-from PyQt6.QtCore import *
-from PyQt6.QtGui import *
-from PyQt6.QtWidgets import *
+from PyQt6.QtWidgets import QMessageBox, QPushButton
 
 
 class MessageBox():
