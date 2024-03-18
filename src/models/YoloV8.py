@@ -10,8 +10,8 @@ from ultralytics import YOLO
 
 class YoloV8:
     def __init__(self, model_path: str):
-        self.model = YOLO(model_path).to('cpu')
-        # self.model.eval()
+        device = 'cuda' if torch.cuda.is_available() else 'cpu'
+        self.model = YOLO(model_path).to(device)
         
     def detect(self, conf: float, frame):
         results = self.model.predict(frame, verbose=False, conf=conf)[0]
