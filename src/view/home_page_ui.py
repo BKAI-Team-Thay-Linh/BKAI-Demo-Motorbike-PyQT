@@ -181,6 +181,6 @@ class Ui_HomePage(object):
         self.output_button.setText(_translate("HomePage", "..."))
         self.output_lineEdit.setToolTip(_translate("HomePage", "<html><head/><body><p><br/></p></body></html>"))
         self.process_button.setText(_translate("HomePage", "Process"))
-        self.label.setText(_translate("HomePage", "BKAI Motorcycle Detection"))
+        self.label.setText(_translate("HomePage", "Motorcycle Detection"))
         self.device_label.setText(_translate("HomePage", "Device:"))
         self._label.setText(_translate("HomePage", "Detect Confidence:"))

@@ -154,3 +154,7 @@ cython_debug/
 assets/*
 
 weight/*
+
+!weight/best_final.pt
+!weight/best_superfinal.pt
+!weight/mars-small128.pb

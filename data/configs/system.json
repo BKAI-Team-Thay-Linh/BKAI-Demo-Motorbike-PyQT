@@ -1,5 +1,5 @@
 {
-    "last_visited_folder": "C:/Users/hokag/Documents/GitHub/BKAI-Demo-Motorbike-PyQT/assets",
+    "last_visited_folder": "C:/Users/hokag/Downloads",
     "detect_confidence": 0.5,
     "yolo_model_path": "weight/best_final.pt",
     "deepsort_model_path": "weight/mars-small128.pb"
