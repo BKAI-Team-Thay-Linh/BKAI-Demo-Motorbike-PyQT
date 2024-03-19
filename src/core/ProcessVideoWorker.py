@@ -12,32 +12,35 @@ from PyQt6.QtCore import *
 from src.core import core_logger
 from src.models.Models import Models
 import ultralytics as ult
+from datetime import datetime
 
 
 class ProcessVideoWorker(QObject):
 
     started = pyqtSignal()
-    finished = pyqtSignal()
+    finished = pyqtSignal(str)
     logging = pyqtSignal(str)
     error = pyqtSignal(str)
     set_up_progress_bar = pyqtSignal(int)
     increase_progress_bar = pyqtSignal()
 
-    def __init__(self, video_path: str, save_folder: str, parent: QObject | None = ...) -> None:
+    def __init__(self, video_path: str, save_folder: str, sys_config: dict, detect_conf: float, parent: QObject | None = ...) -> None:
         super(ProcessVideoWorker, self).__init__()
         self.video_path = video_path
         self.save_folder = save_folder
+        self.sys_config = sys_config
+        self.detect_conf = detect_conf
 
         # Parameters
         self.bbox_coordinates = {}  # For drawing the bounding box on the original frame
 
         # Init the YOLO model
         device = 'cuda' if torch.cuda.is_available() else 'cpu'
-        self.yolo = ult.YOLO('weight/yolov8m.pt').to(device=device)
+        self.yolo = ult.YOLO(self.sys_config['yolo_model_path']).to(device=device)
         core_logger.info('YOLO model has been loaded')
 
         self.classification_model = Models(model='resnet18', num_classes=3)
-        self.classification_model.load_weight('weight/resnet18.ckpt')
+        self.classification_model.load_weight(self.sys_config['classification_model_path'])
         core_logger.info('Classification model has been loaded')
 
     def extract_video_into_frames(self):
@@ -49,6 +52,7 @@ class ProcessVideoWorker(QObject):
 
         cap = cv2.VideoCapture(self.video_path)
         total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+        self.fps = int(cap.get(cv2.CAP_PROP_FPS))
         self.set_up_progress_bar.emit(total_frames)
 
         core_logger.info(f'Extracting video into frames, total frames: {total_frames}')
@@ -64,6 +68,11 @@ class ProcessVideoWorker(QObject):
 
                 self.increase_progress_bar.emit()
                 core_logger.info(f'Extracting Frame: {frame_id}/{total_frames}')
+                
+                # Show the frame 
+                cv2.imshow('Frame', frame)
+                if cv2.waitKey(1) & 0xFF == ord('q'):
+                    break
 
                 # Save the frame
                 cv2.imwrite(frame_path, frame)
@@ -76,7 +85,7 @@ class ProcessVideoWorker(QObject):
         # Reset the progress bar
         self.set_up_progress_bar.emit(0)
 
-    def _crop_bbox_and_save(self, frame_path: str, conf: float = 0.4):
+    def _crop_bbox_and_save(self, frame_path: str):
         """
             Step 2:
                 Crop the frame into bounding box
@@ -90,7 +99,7 @@ class ProcessVideoWorker(QObject):
 
         # Get the bounding box
         core_logger.info(f'Detecting bboxes in the frame: {original_frame_name}')
-        detection_result = self.yolo.predict(original_frame, conf=conf, classes=3)
+        detection_result = self.yolo.predict(original_frame, conf=self.detect_conf, classes=3)
         bounding_boxes_coor = detection_result[0].boxes.xywh.cpu().numpy().tolist()
         print(bounding_boxes_coor)
 
@@ -217,8 +226,9 @@ class ProcessVideoWorker(QObject):
         frame_width, frame_height = Image.open(os.path.join(
             '.temp', 'annotated_frame', os.listdir('.temp/annotated_frame')[0])).size
 
-        video.open(os.path.join(self.save_folder, 'annotated_video.mp4'),
-                   cv2.VideoWriter_fourcc(*'mp4v'), 30, (frame_width, frame_height))
+        date_now = datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
+        save_path = os.path.join(self.save_folder, f'Motorcycle Annotated Video at {date_now}.mp4')
+        video.open(save_path, cv2.VideoWriter_fourcc(*'mp4v'), self.fps, (frame_width, frame_height))
 
         self.set_up_progress_bar.emit(len(self.bbox_coordinates))
 
@@ -239,7 +249,7 @@ class ProcessVideoWorker(QObject):
         # Clean up the .temp folder
         shutil.rmtree('.temp')
 
-        self.finished.emit()
+        self.finished.emit(save_path)
 
 
 if __name__ == '__main__':

@@ -1,3 +1,7 @@
 {
-    "last_visited_folder": "C:/Users/banal/Downloads"
+    "last_visited_folder": "C:/Users/hokag/Videos/OBS",
+    "detect_confidence": 0.4,
+    "yolo_model_path": "weight/yolov8m.pt",
+    "classification_model_path": "weight/resnet18.ckpt",
+    "deepsort_model_path": "weight/mars-small128.pb"
 }
