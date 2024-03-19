@@ -2,6 +2,7 @@ import os
 import shutil
 import sys
 import numpy as np
+import torch
 sys.path.append(os.getcwd())  # NOQA
 
 import cv2
@@ -31,8 +32,9 @@ class ProcessVideoWorker(QObject):
         self.bbox_coordinates = {}  # For drawing the bounding box on the original frame
 
         # Init the YOLO model
-        self.yolo = ult.YOLO('weight/yolov8n.pt')
-        core_logger.info('yolov8n model has been loaded')
+        device = 'cuda' if torch.cuda.is_available() else 'cpu'
+        self.yolo = ult.YOLO('weight/yolov8m.pt').to(device=device)
+        core_logger.info('YOLO model has been loaded')
 
         self.classification_model = Models(model='resnet18', num_classes=3)
         self.classification_model.load_weight('weight/resnet18.ckpt')
@@ -89,7 +91,8 @@ class ProcessVideoWorker(QObject):
         # Get the bounding box
         core_logger.info(f'Detecting bboxes in the frame: {original_frame_name}')
         detection_result = self.yolo.predict(original_frame, conf=conf, classes=3)
-        bounding_boxes_coor = detection_result[0].boxes.xywh.numpy().tolist()
+        bounding_boxes_coor = detection_result[0].boxes.xywh.cpu().numpy().tolist()
+        print(bounding_boxes_coor)
 
         for idx, bb in enumerate(bounding_boxes_coor):
             x, y, w, h = bb
