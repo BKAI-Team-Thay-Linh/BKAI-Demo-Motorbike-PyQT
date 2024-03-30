@@ -5,6 +5,8 @@ import numpy as np
 
 sys.path.append(os.getcwd())  # NOQA
 
+import uuid
+
 import cv2
 from PIL import Image
 from PyQt6.QtCore import QDateTime, QObject, pyqtSignal
@@ -49,18 +51,13 @@ class ProcessVideoWorker(QObject):
         scores,
         class_ids,
         ids,
-        classes=["xe ga", "xe so"],  # default classes
+        classes=["xe so", "xe ga"],  # default classes
         mask_alpha=0.3,
     ):
         height, width = img.shape[:2]
         np.random.seed(0)
 
-        # Dynamically generate colors for each class_id
-        unique_class_ids = np.unique(class_ids)
-        colors = {
-            class_id: np.random.randint(0, 255, size=3).tolist()
-            for class_id in unique_class_ids
-        }
+        colors = {0: [172, 47, 117], 1: [192, 67, 251], 2: [195, 103, 9]}
 
         core_logger.info(f"==>> colors: {colors}")
 
@@ -73,7 +70,7 @@ class ProcessVideoWorker(QObject):
 
         # Draw bounding boxes and labels of detections
         for bbox, score, class_id, id_ in zip(bboxes, scores, class_ids, ids):
-            if class_id < 3:
+            if class_id <= 1:
                 color = colors[class_id]
 
                 x1, y1, x2, y2 = bbox.astype(int)
@@ -138,6 +135,12 @@ class ProcessVideoWorker(QObject):
             core_logger.info(f"Coordinates: {x1, y1, x2, y2}")
             cropped_img = img.crop((x1, y1, x2, y2))
             class_id = self._classifiers.infer(cropped_img)
+
+            unique_name = str(uuid.uuid4())
+
+            # Save the cropped result to check
+            cropped_img.save(f".temp/{unique_name}_{class_id}.jpg")
+
             core_logger.info(f"Class ID: {class_id}")
             class_ids.append(class_id)
 
