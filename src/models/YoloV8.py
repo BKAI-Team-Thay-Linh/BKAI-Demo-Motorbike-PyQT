@@ -10,17 +10,17 @@ from ultralytics import YOLO
 
 class YoloV8:
     def __init__(self, model_path: str):
-        device = 'cuda' if torch.cuda.is_available() else 'cpu'
+        device = "cuda" if torch.cuda.is_available() else "cpu"
         self.model = YOLO(model_path).to(device)
-        
+
     def detect(self, conf: float, frame):
         results = self.model.predict(frame, verbose=False, conf=conf)[0]
-        bboxes = results.boxes.xywh.cpu().numpy()
-        bboxes[:, :2] -= bboxes[:, 2:] / 2  # xywh to xyxy
+        bboxes_coor = results.boxes.xywh.cpu().numpy()
+        bboxes_coor[:, :2] -= bboxes_coor[:, 2:] / 2  # xywh to xyxy
         scores = results.boxes.conf.cpu().numpy()
         class_ids = results.boxes.cls.cpu().numpy()
 
-        return bboxes, scores, class_ids
+        return bboxes_coor, scores, class_ids
 
     def draw(self, frame, bboxes, scores, class_ids):
         for bbox, score, class_id in zip(bboxes, scores, class_ids):

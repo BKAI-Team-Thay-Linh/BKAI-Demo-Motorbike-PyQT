@@ -23,19 +23,19 @@ def handle_exception(exctype, value, tb: TracebackType):
     sys.__excepthook__(exctype, value, tb)
     critical_error(f"{value}.\n\nFor more information, please see the log file")
 
+
 if __name__ == "__main__":
     sys.excepthook = handle_exception
     app = QApplication(sys.argv)
-    
+
     try:
         # Create the main window
         window = HomeGUI()
         window.show()
-        
+
         # Run the application
         sys.exit(app.exec())
     except Exception as e:
         print(traceback.format_exc())
         critical_error(str(e))
         sys.exit(1)
-        
