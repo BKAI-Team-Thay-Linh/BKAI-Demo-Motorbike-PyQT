@@ -1,6 +1,6 @@
 {
     "last_visited_folder": "D:/Backup/Videos/Captures",
-    "detect_confidence": 0.5,
-    "yolo_model_path": "weight/best_final.pt",
+    "detect_confidence": 0.4,
+    "yolo_model_path": "weight/yolov8n.pt",
     "deepsort_model_path": "weight/mars-small128.pb"
 }
