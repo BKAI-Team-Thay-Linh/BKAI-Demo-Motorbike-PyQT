@@ -43,6 +43,7 @@ class ProcessVideoWorker(QObject):
         self.detector = YoloV8(model_path=sys_config["yolo_model_path"])
         self.tracker = DeepSort(model_path=sys_config["deepsort_model_path"])
         self._classifiers = Models(model="resnet18", num_classes=3)
+        self._classifiers.load_weight(sys_config["classifier_weight_path"])
 
     def draw_detection(
         self,
@@ -51,7 +52,7 @@ class ProcessVideoWorker(QObject):
         scores,
         class_ids,
         ids,
-        classes=["xe so", "xe ga"],  # default classes
+        classes=["xe so", "xe ga", "khong phai xe"],  # default classes
         mask_alpha=0.3,
     ):
         height, width = img.shape[:2]
@@ -70,7 +71,7 @@ class ProcessVideoWorker(QObject):
 
         # Draw bounding boxes and labels of detections
         for bbox, score, class_id, id_ in zip(bboxes, scores, class_ids, ids):
-            if class_id <= 1:
+            if class_id <= 2:
                 color = colors[class_id]
 
                 x1, y1, x2, y2 = bbox.astype(int)
@@ -80,7 +81,7 @@ class ProcessVideoWorker(QObject):
 
                 # Draw fill rectangle in mask image
                 cv2.rectangle(mask_img, (x1, y1), (x2, y2), color, -1)
-                label = classes[class_id - 1]
+                label = classes[class_id]
                 caption = f"{label} ID: {id_}"
                 (tw, th), _ = cv2.getTextSize(
                     text=caption,

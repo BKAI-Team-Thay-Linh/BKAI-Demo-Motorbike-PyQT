@@ -2,5 +2,6 @@
     "last_visited_folder": "D:/Backup/Videos/Captures",
     "detect_confidence": 0.4,
     "yolo_model_path": "weight/best_v9.pt",
-    "deepsort_model_path": "weight/mars-small128.pb"
+    "deepsort_model_path": "weight/mars-small128.pb",
+    "classifier_weight_path": "weight/resnet18.ckpt"
 }

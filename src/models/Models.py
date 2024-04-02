@@ -5,6 +5,7 @@ sys.path.append(os.getcwd())  # NOQA
 
 import albumentations as A
 import numpy as np
+import polars as pl
 import torch
 from albumentations.pytorch import ToTensorV2
 from PIL import Image
@@ -55,7 +56,18 @@ if __name__ == "__main__":
     model = Models()
     model.load_weight("weight/resnet18.ckpt")
 
-    for img_name in os.listdir(".temp/cropped_bboxes"):
-        img_path = f".temp/cropped_bboxes/{img_name}"
+    output = []
+
+    for img_name in os.listdir(".temp"):
+        img_path = f".temp/{img_name}"
         img = Image.open(img_path)
-        print(model.infer(img))
+
+        result = model.infer(img)
+
+        print(f"Image: {img_name}, Prediction: result")
+
+        output.append({"image": img_name, "prediction": result})
+
+    df = pl.DataFrame(output)
+
+    df.write_csv("output.csv")
