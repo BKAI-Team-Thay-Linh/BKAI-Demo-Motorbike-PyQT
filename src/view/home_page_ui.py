@@ -12,11 +12,11 @@ from PyQt6 import QtCore, QtGui, QtWidgets
 class Ui_HomePage(object):
     def setupUi(self, HomePage):
         HomePage.setObjectName("HomePage")
-        HomePage.resize(1054, 655)
+        HomePage.resize(1342, 757)
         self.centralwidget = QtWidgets.QWidget(parent=HomePage)
         self.centralwidget.setObjectName("centralwidget")
         self.frame = QtWidgets.QFrame(parent=self.centralwidget)
-        self.frame.setGeometry(QtCore.QRect(0, -10, 1061, 671))
+        self.frame.setGeometry(QtCore.QRect(0, -10, 1321, 741))
         font = QtGui.QFont()
         font.setPointSize(10)
         self.frame.setFont(font)
@@ -25,17 +25,18 @@ class Ui_HomePage(object):
         self.frame.setFrameShadow(QtWidgets.QFrame.Shadow.Raised)
         self.frame.setObjectName("frame")
         self.spin_label = QtWidgets.QLabel(parent=self.frame)
-        self.spin_label.setGeometry(QtCore.QRect(1010, 130, 31, 31))
+        self.spin_label.setGeometry(QtCore.QRect(1290, 60, 31, 31))
         font = QtGui.QFont()
         font.setPointSize(11)
         font.setBold(True)
         font.setItalic(True)
         self.spin_label.setFont(font)
         self.spin_label.setText("")
-        self.spin_label.setPixmap(QtGui.QPixmap(":/icons/loading.gif"))
+        self.spin_label.setPixmap(QtGui.QPixmap("c:\\Users\\hokag\\Documents\\GitHub\\BKAI-Demo-Motorbike-PyQT\\src\\view\\\n"
+"                            :/icons/loading.gif"))
         self.spin_label.setObjectName("spin_label")
         self.progressBar = QtWidgets.QProgressBar(parent=self.frame)
-        self.progressBar.setGeometry(QtCore.QRect(690, 134, 301, 23))
+        self.progressBar.setGeometry(QtCore.QRect(690, 64, 571, 23))
         font = QtGui.QFont()
         font.setPointSize(11)
         self.progressBar.setFont(font)
@@ -45,7 +46,7 @@ class Ui_HomePage(object):
         self.progressBar.setOrientation(QtCore.Qt.Orientation.Horizontal)
         self.progressBar.setObjectName("progressBar")
         self.label_6 = QtWidgets.QLabel(parent=self.frame)
-        self.label_6.setGeometry(QtCore.QRect(570, 123, 111, 41))
+        self.label_6.setGeometry(QtCore.QRect(570, 53, 111, 41))
         font = QtGui.QFont()
         font.setPointSize(11)
         font.setBold(True)
@@ -105,9 +106,12 @@ class Ui_HomePage(object):
         font.setPointSize(11)
         font.setBold(True)
         self.process_button.setFont(font)
-        self.process_button.setStyleSheet("QPushButton{border-radius:5px;background-color:rgb(0, 104,\n"
-"          74);color:white;font-weight:600}QPushButton:hover{border-radius:5px;border:2px solid\n"
-"          rgb(123, 255, 244);background-color:rgb(0, 104, 74);color:white;font-weight:600}")
+        self.process_button.setStyleSheet("QPushButton{border-radius:5px;background-color:rgb(0,\n"
+"                            104,\n"
+"                            74);color:white;font-weight:600}QPushButton:hover{border-radius:5px;border:2px\n"
+"                            solid\n"
+"                            rgb(123, 255, 244);background-color:rgb(0, 104,\n"
+"                            74);color:white;font-weight:600}")
         self.process_button.setObjectName("process_button")
         self.label = QtWidgets.QLabel(parent=self.frame)
         self.label.setGeometry(QtCore.QRect(60, 40, 321, 41))
@@ -117,7 +121,7 @@ class Ui_HomePage(object):
         self.label.setFont(font)
         self.label.setObjectName("label")
         self.log_area = QtWidgets.QTextEdit(parent=self.frame)
-        self.log_area.setGeometry(QtCore.QRect(570, 210, 421, 391))
+        self.log_area.setGeometry(QtCore.QRect(550, 100, 771, 151))
         self.log_area.setReadOnly(True)
         self.log_area.setObjectName("log_area")
         self.line = QtWidgets.QFrame(parent=self.frame)
@@ -126,7 +130,7 @@ class Ui_HomePage(object):
         self.line.setFrameShadow(QtWidgets.QFrame.Shadow.Sunken)
         self.line.setObjectName("line")
         self.line_2 = QtWidgets.QFrame(parent=self.frame)
-        self.line_2.setGeometry(QtCore.QRect(520, 90, 20, 531))
+        self.line_2.setGeometry(QtCore.QRect(520, 50, 20, 691))
         self.line_2.setFrameShape(QtWidgets.QFrame.Shape.VLine)
         self.line_2.setFrameShadow(QtWidgets.QFrame.Shadow.Sunken)
         self.line_2.setObjectName("line_2")
@@ -190,6 +194,12 @@ class Ui_HomePage(object):
         font.setPointSize(12)
         self.opt_tracking.setFont(font)
         self.opt_tracking.setObjectName("opt_tracking")
+        self.widget = QtWidgets.QWidget(parent=self.frame)
+        self.widget.setGeometry(QtCore.QRect(550, 270, 771, 431))
+        self.widget.setObjectName("widget")
+        self.pushButton = QtWidgets.QPushButton(parent=self.frame)
+        self.pushButton.setGeometry(QtCore.QRect(910, 710, 75, 24))
+        self.pushButton.setObjectName("pushButton")
         HomePage.setCentralWidget(self.centralwidget)
         self.statusbar = QtWidgets.QStatusBar(parent=HomePage)
         self.statusbar.setObjectName("statusbar")
@@ -203,16 +213,22 @@ class Ui_HomePage(object):
         HomePage.setWindowTitle(_translate("HomePage", "Motorcycle Demo"))
         self.label_6.setText(_translate("HomePage", "Running Status"))
         self.label_7.setText(_translate("HomePage", "Choose input file:"))
-        self.input_button.setToolTip(_translate("HomePage", "<html><head/><body><p><br/></p></body></html>"))
-        self.input_button.setWhatsThis(_translate("HomePage", "<html><head/><body><p><br/></p></body></html>"))
+        self.input_button.setToolTip(_translate("HomePage", "\n"
+"                            <html><head/><body><p><br/></p></body></html>"))
+        self.input_button.setWhatsThis(_translate("HomePage", "\n"
+"                            <html><head/><body><p><br/></p></body></html>"))
         self.input_button.setText(_translate("HomePage", "..."))
-        self.input_lineEdit.setToolTip(_translate("HomePage", "<html><head/><body><p><br/></p></body></html>"))
+        self.input_lineEdit.setToolTip(_translate("HomePage", "\n"
+"                            <html><head/><body><p><br/></p></body></html>"))
         self.input_lineEdit.setPlaceholderText(_translate("HomePage", "(.mp4, .avi, .flv, .h265)"))
         self.label_8.setText(_translate("HomePage", "Choose output folder:"))
-        self.output_button.setToolTip(_translate("HomePage", "<html><head/><body><p><br/></p></body></html>"))
-        self.output_button.setWhatsThis(_translate("HomePage", "<html><head/><body><p><br/></p></body></html>"))
+        self.output_button.setToolTip(_translate("HomePage", "\n"
+"                            <html><head/><body><p><br/></p></body></html>"))
+        self.output_button.setWhatsThis(_translate("HomePage", "\n"
+"                            <html><head/><body><p><br/></p></body></html>"))
         self.output_button.setText(_translate("HomePage", "..."))
-        self.output_lineEdit.setToolTip(_translate("HomePage", "<html><head/><body><p><br/></p></body></html>"))
+        self.output_lineEdit.setToolTip(_translate("HomePage", "\n"
+"                            <html><head/><body><p><br/></p></body></html>"))
         self.process_button.setText(_translate("HomePage", "Process"))
         self.label.setText(_translate("HomePage", "Motorcycle Detection"))
         self.device_label.setText(_translate("HomePage", "Device:"))
@@ -221,3 +237,4 @@ class Ui_HomePage(object):
         self.label_2.setText(_translate("HomePage", "Options"))
         self.opt_fog_denoise.setText(_translate("HomePage", "Fog Denoise"))
         self.opt_tracking.setText(_translate("HomePage", "Object ID Tracking"))
+        self.pushButton.setText(_translate("HomePage", "Play / Stop"))
