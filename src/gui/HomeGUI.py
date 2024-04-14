@@ -31,6 +31,7 @@ class HomeGUI(QMainWindow):
         self.home_ui.conf_slide.valueChanged.connect(
             lambda value: self.home_ui.conf_label.setText(f"{round(value,2)} %")
         )
+        self.home_ui.conf_slide.valueChanged
 
         # Thread
         self.process_video_thread = QThread()
@@ -177,3 +178,8 @@ class HomeGUI(QMainWindow):
 
         # Start the thread
         self.process_video_thread.start()
+
+    """Media Player"""
+
+    def _start_player(self):
+        pass
