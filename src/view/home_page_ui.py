@@ -32,12 +32,7 @@ class Ui_HomePage(object):
         font.setItalic(True)
         self.spin_label.setFont(font)
         self.spin_label.setText("")
-        self.spin_label.setPixmap(
-            QtGui.QPixmap(
-                "c:\\Users\\hokag\\Documents\\GitHub\\BKAI-Demo-Motorbike-PyQT\\src\\view\\\n"
-                "                            :/icons/loading.gif"
-            )
-        )
+        self.spin_label.setPixmap(QtGui.QPixmap(":/icons/loading.gif"))
         self.spin_label.setObjectName("spin_label")
         self.progressBar = QtWidgets.QProgressBar(parent=self.frame)
         self.progressBar.setGeometry(QtCore.QRect(690, 64, 571, 23))
