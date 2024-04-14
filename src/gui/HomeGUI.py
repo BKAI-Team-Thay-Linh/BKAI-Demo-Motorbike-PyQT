@@ -158,6 +158,14 @@ class HomeGUI(QMainWindow):
             save_folder=output_folder,
             sys_config=self.system_configs,
             dectect_conf=self.home_ui.conf_slide.value() / 100,
+            options={
+                "light_enhance": True
+                if self.home_ui.opt_light_enhance.isChecked()
+                else False,
+                "fog_dehaze": True
+                if self.home_ui.opt_fog_dehaze.isChecked()
+                else False,
+            },
         )
         self.process_video_worker.moveToThread(self.process_video_thread)
 

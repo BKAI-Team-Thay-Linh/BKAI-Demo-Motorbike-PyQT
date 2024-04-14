@@ -272,8 +272,8 @@
     <widget class="QPushButton" name="process_button">
      <property name="geometry">
       <rect>
-       <x>210</x>
-       <y>570</y>
+       <x>220</x>
+       <y>560</y>
        <width>101</width>
        <height>41</height>
       </rect>
@@ -480,7 +480,7 @@
       <enum>Qt::Horizontal</enum>
      </property>
     </widget>
-    <widget class="QCheckBox" name="opt_fog_denoise">
+    <widget class="QCheckBox" name="opt_fog_dehaze">
      <property name="geometry">
       <rect>
        <x>340</x>
@@ -495,25 +495,7 @@
       </font>
      </property>
      <property name="text">
-      <string>Fog Denoise</string>
-     </property>
-    </widget>
-    <widget class="QCheckBox" name="opt_tracking">
-     <property name="geometry">
-      <rect>
-       <x>60</x>
-       <y>480</y>
-       <width>161</width>
-       <height>31</height>
-      </rect>
-     </property>
-     <property name="font">
-      <font>
-       <pointsize>12</pointsize>
-      </font>
-     </property>
-     <property name="text">
-      <string>Object ID Tracking</string>
+      <string>Fog Dehaze</string>
      </property>
     </widget>
     <widget class="QWidget" name="widget" native="true">
