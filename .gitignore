@@ -160,3 +160,6 @@ weight/*
 !weight/mars-small128.pb
 
 .vscode
+
+test
+!test/.template.py

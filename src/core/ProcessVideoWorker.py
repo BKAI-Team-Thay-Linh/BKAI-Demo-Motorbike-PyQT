@@ -30,7 +30,8 @@ class ProcessVideoWorker(QObject):
         video_path: str,
         save_folder: str,
         sys_config: dict,
-        dectect_conf: float = 0.5,
+        dectect_conf: float = 0.4,
+        options: dict = None,
         parent: QObject | None = ...,
     ) -> None:
         super(ProcessVideoWorker, self).__init__()
@@ -38,6 +39,7 @@ class ProcessVideoWorker(QObject):
         self.save_folder = save_folder
         self.sys_config = sys_config
         self.detect_conf = dectect_conf
+        self.options = options
         core_logger.info(f"==>> detect_conf: {self.detect_conf}")
 
         self.detector = YoloV8(model_path=sys_config["yolo_model_path"])
@@ -150,21 +152,23 @@ class ProcessVideoWorker(QObject):
     def run(self):
         self.started.emit()
 
-        # Define the video capture object
+        ############# Define the video capture object and its properties
         cap = cv2.VideoCapture(self.video_path)
         width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
         height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
         fps = int(cap.get(cv2.CAP_PROP_FPS))
         fourcc = cv2.VideoWriter_fourcc(*"MJPG")
 
+        ############# Define the video writer object
         datetime_now = QDateTime.currentDateTime().toString("yyyy-MM-dd_hh-mm-ss")
         video_path = os.path.join(self.save_folder, f"{datetime_now}.avi")
         out = cv2.VideoWriter(video_path, fourcc, fps, (width, height))
 
-        # Get tracking results
+        ############# Some variables for tracking
         all_tracking_results = []
         tracked_ids = np.array([], dtype=np.int32)
 
+        ############# Start processing the video into frames
         self.set_up_progress_bar.emit(int(cap.get(cv2.CAP_PROP_FRAME_COUNT)))
         self.logging.emit(
             f"Processing video: {os.path.basename(self.video_path)}", "blue"
@@ -182,12 +186,25 @@ class ProcessVideoWorker(QObject):
             core_logger.info(
                 f"Processing frame {int(cap.get(cv2.CAP_PROP_POS_FRAMES))}/{int(cap.get(cv2.CAP_PROP_FRAME_COUNT))}"
             )
+
+            ############# Enhance the frame (lighting or contrast, etc.)
+
+            if self.options.get("light_enhance") is True:
+                # TODO: Implement the light enhancement code here
+                pass
+
+            if self.options.get("fog_dehaze") is True:
+                # TODO: Implement the fog dehaze code here
+                pass
+
+            ############# Detect objects in the frame
             detector_results = self.detector.detect(conf=self.detect_conf, frame=frame)
             bboxes, scores, class_ids = detector_results
 
-            # Classify detected objects
+            ############# Classify detected objects
             new_class_ids = self._classify(bboxes, frame)
 
+            ############# Track detected objects
             tracker_pred = self.tracker.tracking(
                 origin_frame=frame,
                 bboxes=bboxes,
@@ -217,6 +234,7 @@ class ProcessVideoWorker(QObject):
             else:
                 result_img = frame
 
+            ############# Write the frame to the video
             all_tracking_results.append(tracker_pred)
 
             out.write(result_img)
