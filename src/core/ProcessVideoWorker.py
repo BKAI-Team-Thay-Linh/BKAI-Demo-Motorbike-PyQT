@@ -1,257 +1,233 @@
 import os
-import shutil
 import sys
+
 import numpy as np
-import torch
+
 sys.path.append(os.getcwd())  # NOQA
+
+import uuid
 
 import cv2
 from PIL import Image
+from PyQt6.QtCore import QDateTime, QObject, pyqtSignal
 
-from PyQt6.QtCore import *
 from src.core import core_logger
+from src.models.DeepSort import DeepSort
 from src.models.Models import Models
-import ultralytics as ult
-from datetime import datetime
+from src.models.YoloV8 import YoloV8
 
 
 class ProcessVideoWorker(QObject):
-
     started = pyqtSignal()
     finished = pyqtSignal(str)
-    logging = pyqtSignal(str)
+    logging = pyqtSignal(str, str)
     error = pyqtSignal(str)
     set_up_progress_bar = pyqtSignal(int)
     increase_progress_bar = pyqtSignal()
 
-    def __init__(self, video_path: str, save_folder: str, sys_config: dict, detect_conf: float, parent: QObject | None = ...) -> None:
+    def __init__(
+        self,
+        video_path: str,
+        save_folder: str,
+        sys_config: dict,
+        dectect_conf: float = 0.5,
+        parent: QObject | None = ...,
+    ) -> None:
         super(ProcessVideoWorker, self).__init__()
         self.video_path = video_path
         self.save_folder = save_folder
         self.sys_config = sys_config
-        self.detect_conf = detect_conf
+        self.detect_conf = dectect_conf
+        core_logger.info(f"==>> detect_conf: {self.detect_conf}")
 
-        # Parameters
-        self.bbox_coordinates = {}  # For drawing the bounding box on the original frame
+        self.detector = YoloV8(model_path=sys_config["yolo_model_path"])
+        self.tracker = DeepSort(model_path=sys_config["deepsort_model_path"])
+        self._classifiers = Models(model="resnet18", num_classes=3)
+        self._classifiers.load_weight(sys_config["classifier_weight_path"])
 
-        # Init the YOLO model
-        device = 'cuda' if torch.cuda.is_available() else 'cpu'
-        self.yolo = ult.YOLO(self.sys_config['yolo_model_path']).to(device=device)
-        core_logger.info('YOLO model has been loaded')
+    def draw_detection(
+        self,
+        img,
+        bboxes,
+        scores,
+        class_ids,
+        ids,
+        classes=["xe so", "xe ga", "khong phai xe"],  # default classes
+        mask_alpha=0.3,
+    ):
+        height, width = img.shape[:2]
+        np.random.seed(0)
 
-        self.classification_model = Models(model='resnet18', num_classes=3)
-        self.classification_model.load_weight(self.sys_config['classification_model_path'])
-        core_logger.info('Classification model has been loaded')
+        colors = {0: [172, 47, 117], 1: [192, 67, 251], 2: [195, 103, 9]}
 
-    def extract_video_into_frames(self):
-        """
-            Step 1:
-                Extract video into frames and save them in the .temp folder
-        """
-        os.makedirs('.temp/extracted_frame', exist_ok=True)
+        core_logger.info(f"==>> colors: {colors}")
 
-        cap = cv2.VideoCapture(self.video_path)
-        total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
-        self.fps = int(cap.get(cv2.CAP_PROP_FPS))
-        self.set_up_progress_bar.emit(total_frames)
+        # Create mask image
+        mask_img = img.copy()
+        det_img = img.copy()
 
-        core_logger.info(f'Extracting video into frames, total frames: {total_frames}')
-        self.logging.emit(f'Extracting video into frames, total frames: {total_frames}')
+        size = min([height, width]) * 0.0006
+        text_thickness = int(min([height, width]) * 0.001)
 
-        while cap.isOpened():
-            ret, frame = cap.read()
-            if ret:
-                # Get the frame id and name then save path
-                frame_id = int(cap.get(1))
-                frame_name = f'{frame_id}.jpg'
-                frame_path = os.path.join('.temp', 'extracted_frame', frame_name)
+        # Draw bounding boxes and labels of detections
+        for bbox, score, class_id, id_ in zip(bboxes, scores, class_ids, ids):
+            if class_id <= 2:
+                color = colors[class_id]
 
-                self.increase_progress_bar.emit()
-                core_logger.info(f'Extracting Frame: {frame_id}/{total_frames}')
-                
-                # Show the frame 
-                cv2.imshow('Frame', frame)
-                if cv2.waitKey(1) & 0xFF == ord('q'):
-                    break
+                x1, y1, x2, y2 = bbox.astype(int)
 
-                # Save the frame
-                cv2.imwrite(frame_path, frame)
+                # Draw rectangle
+                cv2.rectangle(det_img, (x1, y1), (x2, y2), color, 2)
+
+                # Draw fill rectangle in mask image
+                cv2.rectangle(mask_img, (x1, y1), (x2, y2), color, -1)
+                label = classes[class_id]
+                caption = f"{label} ID: {id_}"
+                (tw, th), _ = cv2.getTextSize(
+                    text=caption,
+                    fontFace=cv2.FONT_HERSHEY_SIMPLEX,
+                    fontScale=size,
+                    thickness=text_thickness,
+                )
+                th = int(th * 1.2)
+
+                cv2.rectangle(det_img, (x1, y1), (x1 + tw, y1 - th), color, -1)
+                cv2.rectangle(mask_img, (x1, y1), (x1 + tw, y1 - th), color, -1)
+                cv2.putText(
+                    det_img,
+                    caption,
+                    (x1, y1),
+                    cv2.FONT_HERSHEY_SIMPLEX,
+                    size,
+                    (255, 255, 255),
+                    text_thickness,
+                    cv2.LINE_AA,
+                )
+
+                cv2.putText(
+                    mask_img,
+                    caption,
+                    (x1, y1),
+                    cv2.FONT_HERSHEY_SIMPLEX,
+                    size,
+                    (255, 255, 255),
+                    text_thickness,
+                    cv2.LINE_AA,
+                )
+
             else:
-                break
-
-        cap.release()
-        core_logger.info('Video Extraction Complete')
-
-        # Reset the progress bar
-        self.set_up_progress_bar.emit(0)
-
-    def _crop_bbox_and_save(self, frame_path: str):
-        """
-            Step 2:
-                Crop the frame into bounding box
-        """
-        os.makedirs('.temp/cropped_bboxes', exist_ok=True)
-
-        # Open the frame
-        original_frame = Image.open(frame_path)
-        original_frame_name = os.path.basename(frame_path).split('.')[0]
-        bboxes_info: list = []
-
-        # Get the bounding box
-        core_logger.info(f'Detecting bboxes in the frame: {original_frame_name}')
-        detection_result = self.yolo.predict(original_frame, conf=self.detect_conf, classes=3)
-        bounding_boxes_coor = detection_result[0].boxes.xywh.cpu().numpy().tolist()
-        print(bounding_boxes_coor)
-
-        for idx, bb in enumerate(bounding_boxes_coor):
-            x, y, w, h = bb
-            bbox_name = f'{original_frame_name}_bbox_{idx}.jpg'
-            core_logger.info(f'Extracting BBox: {bbox_name}')
-
-            # Convert to the coordinates in the original image
-            x_min = int(round(x - (w / 2)))
-            y_min = int(round(y - (h / 2)))
-            x_max = x_min + int(round(w))
-            y_max = y_min + int(round(h))
-
-            bboxes_info.append({
-                'name': bbox_name,
-                'coor': (x_min, y_min, x_max, y_max),
-                'class': -1  # -1 means not classified yet
-            })
-
-            # Crop the image
-            crop_image = original_frame.crop((x_min, y_min, x_max, y_max))
-            crop_image.save(os.path.join('.temp', 'cropped_bboxes', bbox_name))
-
-        self.bbox_coordinates[original_frame_name + '.jpg'] = bboxes_info
-        core_logger.info(f'Frame: {original_frame_name} has been processed')
-
-    def _draw_bb(self, thickness: int, font_scale: float, original_image: Image, bb_boxes: list, classes: list):
-        # Convert the image to numpy array
-        original_image = cv2.cvtColor(np.array(original_image), cv2.COLOR_RGB2BGR)
-
-        for bb, cls in zip(bb_boxes, classes):
-            x_min, y_min, x_max, y_max = bb
-
-            # Class 0 will be in blue, class 1 will be in green, else transparent
-            if cls not in (0, 1):
+                print("Class_id out of range colors")
+                print(len(colors))
+                print(class_id)
                 continue
 
-            if cls == 0:
-                color = (255, 0, 0)
-                label = 'xe so'
-            elif cls == 1:
-                color = (0, 255, 0)
-                label = 'xe ga'
+        return cv2.addWeighted(mask_img, mask_alpha, det_img, 1 - mask_alpha, 0)
 
-            # Draw the bounding box
-            cv2.rectangle(original_image, (x_min, y_min), (x_max, y_max), color, thickness)
+    def _classify(self, bboxes, frame):
+        # Convert frame to PIL image
+        frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+        img = Image.fromarray(frame)
 
-            # Draw the label with the bounding box
-            label_size, base_line = cv2.getTextSize(label, cv2.FONT_HERSHEY_SIMPLEX, 0.5, 1)
-            y_min = max(y_min, label_size[1])
-            cv2.rectangle(original_image, (x_min, y_min - label_size[1]),
-                          (x_min + label_size[0], y_min + base_line),
-                          color, cv2.FILLED)
-            cv2.putText(original_image, label, (x_min, y_min), cv2.FONT_HERSHEY_SIMPLEX, font_scale, (0, 0, 0), 1)
+        class_ids = []
+        for bbox in bboxes:
+            x, y, w, h = bbox
+            x1, y1, x2, y2 = int(x), int(y), int(x + w), int(y + h)
 
-        return Image.fromarray(cv2.cvtColor(original_image, cv2.COLOR_BGR2RGB))
+            core_logger.info(f"Coordinates: {x1, y1, x2, y2}")
+            cropped_img = img.crop((x1, y1, x2, y2))
+            class_id = self._classifiers.infer(cropped_img)
+
+            unique_name = str(uuid.uuid4())
+
+            # Save the cropped result to check
+            cropped_img.save(f".temp/{unique_name}_{class_id}.jpg")
+
+            core_logger.info(f"Class ID: {class_id}")
+            class_ids.append(class_id)
+
+        return class_ids
 
     def run(self):
         self.started.emit()
 
-        # Step 1: Extract video into frames
-        self.extract_video_into_frames()
+        # Define the video capture object
+        cap = cv2.VideoCapture(self.video_path)
+        width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+        height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+        fps = int(cap.get(cv2.CAP_PROP_FPS))
+        fourcc = cv2.VideoWriter_fourcc(*"MJPG")
 
-        # Step 2: Crop the frame into bounding box
-        self.set_up_progress_bar.emit(len(os.listdir('.temp/extracted_frame')))
-        self.logging.emit('Cropping the frame into bounding box...')
+        datetime_now = QDateTime.currentDateTime().toString("yyyy-MM-dd_hh-mm-ss")
+        video_path = os.path.join(self.save_folder, f"{datetime_now}.avi")
+        out = cv2.VideoWriter(video_path, fourcc, fps, (width, height))
 
-        for frame in os.listdir('.temp/extracted_frame'):
+        # Get tracking results
+        all_tracking_results = []
+        tracked_ids = np.array([], dtype=np.int32)
+
+        self.set_up_progress_bar.emit(int(cap.get(cv2.CAP_PROP_FRAME_COUNT)))
+        self.logging.emit(
+            f"Processing video: {os.path.basename(self.video_path)}", "blue"
+        )
+        while True:
+            ret, frame = cap.read()
+            if not ret:
+                break
+
             self.increase_progress_bar.emit()
-            frame_path = os.path.join('.temp', 'extracted_frame', frame)
-            self._crop_bbox_and_save(frame_path)
+            self.logging.emit(
+                f"Processing frame {int(cap.get(cv2.CAP_PROP_POS_FRAMES))}/{int(cap.get(cv2.CAP_PROP_FRAME_COUNT))}",
+                "black",
+            )
+            core_logger.info(
+                f"Processing frame {int(cap.get(cv2.CAP_PROP_POS_FRAMES))}/{int(cap.get(cv2.CAP_PROP_FRAME_COUNT))}"
+            )
+            detector_results = self.detector.detect(conf=self.detect_conf, frame=frame)
+            bboxes, scores, class_ids = detector_results
 
-        # Reset the progress bar
-        self.set_up_progress_bar.emit(0)
+            # Classify detected objects
+            new_class_ids = self._classify(bboxes, frame)
 
-        # Step 3: Run the classification model on the cropped bboxes
-        core_logger.info('Running the classification model on the cropped bboxes...')
-        self.logging.emit('Running the classification model on the cropped bboxes...')
+            tracker_pred = self.tracker.tracking(
+                origin_frame=frame,
+                bboxes=bboxes,
+                scores=scores,
+                class_ids=new_class_ids,
+            )
 
-        self.set_up_progress_bar.emit(len(os.listdir('.temp/cropped_bboxes')))
+            if tracker_pred.size > 0:
+                bboxes = tracker_pred[:, :4]
+                class_ids = tracker_pred[:, 4].astype(int)
+                conf_scores = tracker_pred[:, 5]
+                track_ids = tracker_pred[:, 6].astype(int)
 
-        for frame in self.bbox_coordinates.keys():
-            for bbox in self.bbox_coordinates[frame]:
-                self.increase_progress_bar.emit()
+                # Get new tracking IDs
+                new_ids = np.setdiff1d(track_ids, tracked_ids)
 
-                bbox_path = os.path.join('.temp', 'cropped_bboxes', bbox['name'])
-                bbox_image = Image.open(bbox_path)
-                bbox['class'] = self.classification_model.infer(bbox_image)
-                core_logger.info(f'Classified {bbox["name"]} as {bbox["class"]}')
+                # Store new tracking IDs
+                tracked_ids = np.concatenate((tracked_ids, new_ids))
 
-        # Reset the progress bar
-        self.set_up_progress_bar.emit(0)
+                result_img = self.draw_detection(
+                    img=frame,
+                    bboxes=bboxes,
+                    scores=conf_scores,
+                    class_ids=class_ids,
+                    ids=track_ids,
+                )
+            else:
+                result_img = frame
 
-        # Step 4: Draw the bounding box on the original frame
-        core_logger.info('Drawing the bounding box on the original frame...')
-        self.logging.emit('Drawing the bounding box on the original frame...')
+            all_tracking_results.append(tracker_pred)
 
-        os.makedirs('.temp/annotated_frame', exist_ok=True)
+            out.write(result_img)
 
-        self.set_up_progress_bar.emit(len(self.bbox_coordinates))
+        cap.release()
+        out.release()
 
-        for frame in sorted(self.bbox_coordinates.keys()):
-            self.increase_progress_bar.emit()
-            frame_path = os.path.join('.temp', 'extracted_frame', frame)
-            frame_image = Image.open(frame_path)
-            bboxes_info = self.bbox_coordinates[frame]
-
-            bb_boxes = [bbox['coor'] for bbox in bboxes_info]
-            classes = [bbox['class'] for bbox in bboxes_info]
-
-            new_frame = self._draw_bb(2, 0.5, frame_image, bb_boxes, classes)
-            core_logger.info(f'Annotated Frame: {frame}')
-            new_frame.save(os.path.join('.temp', 'annotated_frame', frame))
-
-        # Reset the progress bar
-        self.set_up_progress_bar.emit(0)
-
-        # Step 5: Save the annotated frames into a video
-        core_logger.info('Saving the annotated frames into a video...')
-        self.logging.emit('Saving the annotated frames into a video...')
-
-        video = cv2.VideoWriter()
-        frame_width, frame_height = Image.open(os.path.join(
-            '.temp', 'annotated_frame', os.listdir('.temp/annotated_frame')[0])).size
-
-        date_now = datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
-        save_path = os.path.join(self.save_folder, f'Motorcycle Annotated Video at {date_now}.mp4')
-        video.open(save_path, cv2.VideoWriter_fourcc(*'mp4v'), self.fps, (frame_width, frame_height))
-
-        self.set_up_progress_bar.emit(len(self.bbox_coordinates))
-
-        for frame in sorted(self.bbox_coordinates.keys(), key=lambda x: int(x.split('.')[0])):
-            self.increase_progress_bar.emit()
-
-            frame_path = os.path.join('.temp', 'annotated_frame', frame)
-            core_logger.info(f"==>> frame_path: {frame_path}")
-            frame_image = cv2.imread(frame_path)
-            video.write(frame_image)
-
-        video.release()
-        core_logger.info('Video Processing Complete')
-
-        # Reset the progress bar
-        self.set_up_progress_bar.emit(0)
-
-        # Clean up the .temp folder
-        shutil.rmtree('.temp')
-
-        self.finished.emit(save_path)
+        self.logging.emit(f"Video has been saved to {video_path}", "green")
+        self.finished.emit(video_path)
 
 
-if __name__ == '__main__':
-    worker = ProcessVideoWorker('assets/test_vid.mp4', 'assets')
+if __name__ == "__main__":
+    worker = ProcessVideoWorker("assets/test_vid.mp4", "assets")
     worker.run()
