@@ -6,3 +6,5 @@ pyqt6-tools
 ultralytics
 albumentations
 tensorflow
+timm
+git+https://github.com/sberbank-ai/Real-ESRGAN.git
