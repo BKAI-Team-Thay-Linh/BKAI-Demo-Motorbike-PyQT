@@ -163,3 +163,4 @@ weight/*
 
 test
 !test/.template.py
+.temp

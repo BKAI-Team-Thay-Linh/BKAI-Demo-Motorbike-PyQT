@@ -3,5 +3,7 @@
     "detect_confidence": 0.4,
     "yolo_model_path": "weight/yolo/yolov9_best.pt",
     "deepsort_model_path": "weight/tracking/deepsort/mars-small128.pb",
-    "classifier_weight_path": "weight/classify/resnet18.ckpt"
+    "classifier_weight_path": "weight/classify/resnet18.ckpt",
+    "real_esrgan_weight_path": "weight/super_resolution/RealESRGAN_x2.pth",
+    "exposure_weight_path": "weight/lighting/best_epoch_exposure.pth"
 }

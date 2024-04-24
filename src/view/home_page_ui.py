@@ -40,11 +40,7 @@ class Ui_HomePage(object):
         font.setPointSize(11)
         self.progressBar.setFont(font)
         self.progressBar.setProperty("value", 0)
-        self.progressBar.setAlignment(
-            QtCore.Qt.AlignmentFlag.AlignRight
-            | QtCore.Qt.AlignmentFlag.AlignTrailing
-            | QtCore.Qt.AlignmentFlag.AlignVCenter
-        )
+        self.progressBar.setAlignment(QtCore.Qt.AlignmentFlag.AlignRight|QtCore.Qt.AlignmentFlag.AlignTrailing|QtCore.Qt.AlignmentFlag.AlignVCenter)
         self.progressBar.setTextVisible(False)
         self.progressBar.setOrientation(QtCore.Qt.Orientation.Horizontal)
         self.progressBar.setObjectName("progressBar")
@@ -109,14 +105,12 @@ class Ui_HomePage(object):
         font.setPointSize(11)
         font.setBold(True)
         self.process_button.setFont(font)
-        self.process_button.setStyleSheet(
-            "QPushButton{border-radius:5px;background-color:rgb(0,\n"
-            "                            104,\n"
-            "                            74);color:white;font-weight:600}QPushButton:hover{border-radius:5px;border:2px\n"
-            "                            solid\n"
-            "                            rgb(123, 255, 244);background-color:rgb(0, 104,\n"
-            "                            74);color:white;font-weight:600}"
-        )
+        self.process_button.setStyleSheet("QPushButton{border-radius:5px;background-color:rgb(0,\n"
+"                            104,\n"
+"                            74);color:white;font-weight:600}QPushButton:hover{border-radius:5px;border:2px\n"
+"                            solid\n"
+"                            rgb(123, 255, 244);background-color:rgb(0, 104,\n"
+"                            74);color:white;font-weight:600}")
         self.process_button.setObjectName("process_button")
         self.label = QtWidgets.QLabel(parent=self.frame)
         self.label.setGeometry(QtCore.QRect(60, 40, 321, 41))
@@ -212,54 +206,22 @@ class Ui_HomePage(object):
         HomePage.setWindowTitle(_translate("HomePage", "Motorcycle Demo"))
         self.label_6.setText(_translate("HomePage", "Running Status"))
         self.label_7.setText(_translate("HomePage", "Choose input file:"))
-        self.input_button.setToolTip(
-            _translate(
-                "HomePage",
-                "\n"
-                "                            <html><head/><body><p><br/></p></body></html>",
-            )
-        )
-        self.input_button.setWhatsThis(
-            _translate(
-                "HomePage",
-                "\n"
-                "                            <html><head/><body><p><br/></p></body></html>",
-            )
-        )
+        self.input_button.setToolTip(_translate("HomePage", "\n"
+"                            <html><head/><body><p><br/></p></body></html>"))
+        self.input_button.setWhatsThis(_translate("HomePage", "\n"
+"                            <html><head/><body><p><br/></p></body></html>"))
         self.input_button.setText(_translate("HomePage", "..."))
-        self.input_lineEdit.setToolTip(
-            _translate(
-                "HomePage",
-                "\n"
-                "                            <html><head/><body><p><br/></p></body></html>",
-            )
-        )
-        self.input_lineEdit.setPlaceholderText(
-            _translate("HomePage", "(.mp4, .avi, .flv, .h265)")
-        )
+        self.input_lineEdit.setToolTip(_translate("HomePage", "\n"
+"                            <html><head/><body><p><br/></p></body></html>"))
+        self.input_lineEdit.setPlaceholderText(_translate("HomePage", "(.mp4, .avi, .flv, .h265)"))
         self.label_8.setText(_translate("HomePage", "Choose output folder:"))
-        self.output_button.setToolTip(
-            _translate(
-                "HomePage",
-                "\n"
-                "                            <html><head/><body><p><br/></p></body></html>",
-            )
-        )
-        self.output_button.setWhatsThis(
-            _translate(
-                "HomePage",
-                "\n"
-                "                            <html><head/><body><p><br/></p></body></html>",
-            )
-        )
+        self.output_button.setToolTip(_translate("HomePage", "\n"
+"                            <html><head/><body><p><br/></p></body></html>"))
+        self.output_button.setWhatsThis(_translate("HomePage", "\n"
+"                            <html><head/><body><p><br/></p></body></html>"))
         self.output_button.setText(_translate("HomePage", "..."))
-        self.output_lineEdit.setToolTip(
-            _translate(
-                "HomePage",
-                "\n"
-                "                            <html><head/><body><p><br/></p></body></html>",
-            )
-        )
+        self.output_lineEdit.setToolTip(_translate("HomePage", "\n"
+"                            <html><head/><body><p><br/></p></body></html>"))
         self.process_button.setText(_translate("HomePage", "Process"))
         self.label.setText(_translate("HomePage", "Motorcycle Detection"))
         self.device_label.setText(_translate("HomePage", "Device:"))
