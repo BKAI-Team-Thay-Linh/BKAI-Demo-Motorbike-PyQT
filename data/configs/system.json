@@ -1,5 +1,5 @@
 {
-    "last_visited_folder": "D:/Backup/Videos/Captures",
+    "last_visited_folder": "C:/Users/ADMIN/workspace/GitHub/BKAI-Demo-Motorbike-PyQT/assets",
     "detect_confidence": 0.4,
     "yolo_model_path": "weight/yolo/yolov9_best.pt",
     "deepsort_model_path": "weight/tracking/deepsort/mars-small128.pb",

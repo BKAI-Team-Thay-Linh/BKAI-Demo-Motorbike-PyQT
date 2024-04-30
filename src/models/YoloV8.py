@@ -37,8 +37,8 @@ class YoloV8:
 
 
 if __name__ == "__main__":
-    video_path = "assets/rtsp___Cam26hc.cameraddns.net_556_Streaming_Channels_1 - VLC media player 2023-12-15 09-11-15.mp4"
-    model_path = "weight/yolov8n.pt"
+    video_path = "assets/5min.mp4"
+    model_path = "weight/yolo/yolov9_best.pt"
 
     yolo = YoloV8(model_path)
 
@@ -49,7 +49,7 @@ if __name__ == "__main__":
         if not ret:
             break
 
-        bboxes, scores, class_ids = yolo.detect(frame=frame, conf=0.5)
+        bboxes, scores, class_ids = yolo.detect(frame=frame, conf=0.3)
         frame_with_bboxes = yolo.draw(frame, bboxes, scores, class_ids)
 
         cv2.imshow("frame", frame_with_bboxes)

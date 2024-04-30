@@ -1,3 +1,4 @@
+import json
 import os
 import sys
 
@@ -61,8 +62,6 @@ class ProcessVideoWorker(QObject):
         np.random.seed(0)
 
         colors = {0: [172, 47, 117], 1: [192, 67, 251], 2: [195, 103, 9]}
-
-        core_logger.info(f"==>> colors: {colors}")
 
         # Create mask image
         mask_img = img.copy()
@@ -247,5 +246,10 @@ class ProcessVideoWorker(QObject):
 
 
 if __name__ == "__main__":
-    worker = ProcessVideoWorker("assets/test_vid.mp4", "assets")
+    worker = ProcessVideoWorker(
+        video_path="assets/test_vid.mp4",
+        save_folder="assets",
+        sys_config=json.load(open("data/configs/system.json", "r", encoding="utf-8")),
+        options={"light_enhance": False, "fog_dehaze": False},
+    )
     worker.run()

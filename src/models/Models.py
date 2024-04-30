@@ -54,7 +54,7 @@ class Models(torch.nn.Module):
 
 if __name__ == "__main__":
     model = Models()
-    model.load_weight("weight/resnet18.ckpt")
+    model.load_weight("weight/classify/resnet18.ckpt")
 
     output = []
 
@@ -64,7 +64,7 @@ if __name__ == "__main__":
 
         result = model.infer(img)
 
-        print(f"Image: {img_name}, Prediction: result")
+        print(f"Image: {img_name}, Prediction: {result}")
 
         output.append({"image": img_name, "prediction": result})
 

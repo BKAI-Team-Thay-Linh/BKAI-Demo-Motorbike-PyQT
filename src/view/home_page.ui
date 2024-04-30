@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1342</width>
-    <height>757</height>
+    <width>1349</width>
+    <height>753</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -18,7 +18,7 @@
     <property name="geometry">
      <rect>
       <x>0</x>
-      <y>-10</y>
+      <y>0</y>
       <width>1321</width>
       <height>741</height>
      </rect>
@@ -90,7 +90,7 @@
     <widget class="QLabel" name="label_6">
      <property name="geometry">
       <rect>
-       <x>570</x>
+       <x>550</x>
        <y>53</y>
        <width>111</width>
        <height>41</height>
@@ -188,92 +188,11 @@
       <string>(.mp4, .avi, .flv, .h265)</string>
      </property>
     </widget>
-    <widget class="QLabel" name="label_8">
-     <property name="geometry">
-      <rect>
-       <x>60</x>
-       <y>190</y>
-       <width>161</width>
-       <height>41</height>
-      </rect>
-     </property>
-     <property name="font">
-      <font>
-       <pointsize>11</pointsize>
-       <italic>true</italic>
-       <bold>false</bold>
-      </font>
-     </property>
-     <property name="text">
-      <string>Choose output folder:</string>
-     </property>
-    </widget>
-    <widget class="QToolButton" name="output_button">
-     <property name="geometry">
-      <rect>
-       <x>460</x>
-       <y>230</y>
-       <width>21</width>
-       <height>28</height>
-      </rect>
-     </property>
-     <property name="toolTip">
-      <string>
-                            &lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-     </property>
-     <property name="toolTipDuration">
-      <number>-3</number>
-     </property>
-     <property name="whatsThis">
-      <string>
-                            &lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-     </property>
-     <property name="styleSheet">
-      <string notr="true"/>
-     </property>
-     <property name="text">
-      <string>...</string>
-     </property>
-    </widget>
-    <widget class="QLineEdit" name="output_lineEdit">
-     <property name="geometry">
-      <rect>
-       <x>60</x>
-       <y>231</y>
-       <width>401</width>
-       <height>26</height>
-      </rect>
-     </property>
-     <property name="font">
-      <font>
-       <pointsize>11</pointsize>
-      </font>
-     </property>
-     <property name="cursor">
-      <cursorShape>IBeamCursor</cursorShape>
-     </property>
-     <property name="toolTip">
-      <string>
-                            &lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-     </property>
-     <property name="styleSheet">
-      <string notr="true"/>
-     </property>
-     <property name="text">
-      <string/>
-     </property>
-     <property name="readOnly">
-      <bool>true</bool>
-     </property>
-     <property name="placeholderText">
-      <string/>
-     </property>
-    </widget>
     <widget class="QPushButton" name="process_button">
      <property name="geometry">
       <rect>
-       <x>220</x>
-       <y>560</y>
+       <x>230</x>
+       <y>590</y>
        <width>101</width>
        <height>41</height>
       </rect>
@@ -332,7 +251,7 @@
      <property name="geometry">
       <rect>
        <x>60</x>
-       <y>280</y>
+       <y>170</y>
        <width>421</width>
        <height>20</height>
       </rect>
@@ -358,7 +277,7 @@
      <property name="geometry">
       <rect>
        <x>60</x>
-       <y>290</y>
+       <y>200</y>
        <width>421</width>
        <height>41</height>
       </rect>
@@ -377,9 +296,9 @@
     <widget class="QSlider" name="conf_slide">
      <property name="geometry">
       <rect>
-       <x>210</x>
-       <y>350</y>
-       <width>211</width>
+       <x>220</x>
+       <y>310</y>
+       <width>261</width>
        <height>16</height>
       </rect>
      </property>
@@ -394,7 +313,7 @@
      <property name="geometry">
       <rect>
        <x>60</x>
-       <y>336</y>
+       <y>296</y>
        <width>141</width>
        <height>41</height>
       </rect>
@@ -434,7 +353,7 @@
      <property name="geometry">
       <rect>
        <x>60</x>
-       <y>430</y>
+       <y>520</y>
        <width>161</width>
        <height>31</height>
       </rect>
@@ -452,7 +371,7 @@
      <property name="geometry">
       <rect>
        <x>60</x>
-       <y>390</y>
+       <y>480</y>
        <width>91</width>
        <height>31</height>
       </rect>
@@ -467,24 +386,11 @@
       <string>Options</string>
      </property>
     </widget>
-    <widget class="Line" name="line_3">
-     <property name="geometry">
-      <rect>
-       <x>60</x>
-       <y>370</y>
-       <width>421</width>
-       <height>20</height>
-      </rect>
-     </property>
-     <property name="orientation">
-      <enum>Qt::Horizontal</enum>
-     </property>
-    </widget>
     <widget class="QCheckBox" name="opt_fog_dehaze">
      <property name="geometry">
       <rect>
        <x>340</x>
-       <y>430</y>
+       <y>520</y>
        <width>131</width>
        <height>31</height>
       </rect>
@@ -507,18 +413,137 @@
        <height>431</height>
       </rect>
      </property>
+     <property name="styleSheet">
+      <string notr="true">border: 1px solid black</string>
+     </property>
     </widget>
-    <widget class="QPushButton" name="pushButton">
+    <widget class="QPushButton" name="play_video_button">
      <property name="geometry">
       <rect>
-       <x>910</x>
+       <x>810</x>
+       <y>710</y>
+       <width>91</width>
+       <height>24</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>Play / Pause</string>
+     </property>
+    </widget>
+    <widget class="Line" name="line_4">
+     <property name="geometry">
+      <rect>
+       <x>60</x>
+       <y>460</y>
+       <width>421</width>
+       <height>20</height>
+      </rect>
+     </property>
+     <property name="orientation">
+      <enum>Qt::Horizontal</enum>
+     </property>
+    </widget>
+    <widget class="QLabel" name="device_label_2">
+     <property name="geometry">
+      <rect>
+       <x>60</x>
+       <y>250</y>
+       <width>101</width>
+       <height>41</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <pointsize>11</pointsize>
+       <italic>false</italic>
+       <bold>true</bold>
+      </font>
+     </property>
+     <property name="text">
+      <string>YOLO model:</string>
+     </property>
+    </widget>
+    <widget class="QComboBox" name="yolo_combobox">
+     <property name="geometry">
+      <rect>
+       <x>220</x>
+       <y>260</y>
+       <width>261</width>
+       <height>25</height>
+      </rect>
+     </property>
+    </widget>
+    <widget class="QLabel" name="device_label_3">
+     <property name="geometry">
+      <rect>
+       <x>60</x>
+       <y>340</y>
+       <width>151</width>
+       <height>41</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <pointsize>11</pointsize>
+       <italic>false</italic>
+       <bold>true</bold>
+      </font>
+     </property>
+     <property name="text">
+      <string>Classification model:</string>
+     </property>
+    </widget>
+    <widget class="QComboBox" name="classify_combobox">
+     <property name="geometry">
+      <rect>
+       <x>220</x>
+       <y>350</y>
+       <width>261</width>
+       <height>25</height>
+      </rect>
+     </property>
+    </widget>
+    <widget class="QComboBox" name="tracking_combobox">
+     <property name="geometry">
+      <rect>
+       <x>220</x>
+       <y>400</y>
+       <width>261</width>
+       <height>25</height>
+      </rect>
+     </property>
+    </widget>
+    <widget class="QLabel" name="device_label_4">
+     <property name="geometry">
+      <rect>
+       <x>60</x>
+       <y>390</y>
+       <width>151</width>
+       <height>41</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <pointsize>11</pointsize>
+       <italic>false</italic>
+       <bold>true</bold>
+      </font>
+     </property>
+     <property name="text">
+      <string>Tracking model:</string>
+     </property>
+    </widget>
+    <widget class="QPushButton" name="save_video_button">
+     <property name="geometry">
+      <rect>
+       <x>980</x>
        <y>710</y>
        <width>75</width>
        <height>24</height>
       </rect>
      </property>
      <property name="text">
-      <string>Play / Stop</string>
+      <string>Save</string>
      </property>
     </widget>
    </widget>
