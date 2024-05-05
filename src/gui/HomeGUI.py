@@ -26,7 +26,6 @@ class HomeGUI(QMainWindow):
 
         # Connect event
         self.home_ui.input_button.clicked.connect(self.choose_input_video)
-        self.home_ui.output_button.clicked.connect(self.choose_export_folder)
         self.home_ui.process_button.clicked.connect(self.run_process_video)
         self.home_ui.conf_slide.valueChanged.connect(
             lambda value: self.home_ui.conf_label.setText(f"{round(value,2)} %")
@@ -137,10 +136,9 @@ class HomeGUI(QMainWindow):
 
     def run_process_video(self):
         input_video = self.home_ui.input_lineEdit.text()
-        output_folder = self.home_ui.output_lineEdit.text()
 
-        if not input_video or not output_folder:
-            message = "Input Video or Output Folder is not provided"
+        if not input_video:
+            message = "Input Video is not provided"
             msg.warning_box(content=message)
             gui_logger.error(message)
             return
@@ -155,7 +153,7 @@ class HomeGUI(QMainWindow):
         # Create worker
         self.process_video_worker = ProcessVideoWorker(
             video_path=input_video,
-            save_folder=output_folder,
+            save_folder="output",
             sys_config=self.system_configs,
             dectect_conf=self.home_ui.conf_slide.value() / 100,
             options={

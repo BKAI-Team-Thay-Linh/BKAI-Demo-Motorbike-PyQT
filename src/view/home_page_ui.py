@@ -100,7 +100,7 @@ class Ui_HomePage(object):
         self.log_area.setReadOnly(True)
         self.log_area.setObjectName("log_area")
         self.line = QtWidgets.QFrame(parent=self.frame)
-        self.line.setGeometry(QtCore.QRect(60, 170, 421, 20))
+        self.line.setGeometry(QtCore.QRect(60, 180, 421, 20))
         self.line.setFrameShape(QtWidgets.QFrame.Shape.HLine)
         self.line.setFrameShadow(QtWidgets.QFrame.Shadow.Sunken)
         self.line.setObjectName("line")
