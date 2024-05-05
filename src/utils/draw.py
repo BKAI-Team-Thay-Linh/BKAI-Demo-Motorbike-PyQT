@@ -9,13 +9,13 @@ sys.path.append(os.getcwd())
 import src.utils.constants as const
 
 
-def draw_detection(
+def draw_bboxes(
     img: np.ndarray,
     bboxes: list,  # Bounding boxes
     scores: list,  # Detection scores
     class_ids: list,  # Classify ids
     track_ids: list,  # Tracking ids
-):
+) -> np.ndarray:
     np.random.seed(0)
     height, width = img.shape[:2]
 
@@ -84,10 +84,4 @@ def draw_detection(
             print(f"Unknown class_id: {class_id}")
             continue
 
-    return cv2.addWeighted(
-        src1=mask_img,
-        alpha=const.MASK_ALPHA,
-        src2=det_img,
-        beta=1 - const.MASK_ALPHA,
-        dtype=0,
-    )
+    return cv2.addWeighted(mask_img, const.MASK_ALPHA, det_img, 1 - const.MASK_ALPHA, 0)

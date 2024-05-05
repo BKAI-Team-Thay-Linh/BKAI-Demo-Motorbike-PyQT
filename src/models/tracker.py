@@ -1,9 +1,8 @@
 import os
 import sys
-sys.path.append(os.getcwd())  # NOQA
 
-import cv2
-import json
+sys.path.append(os.getcwd())
+
 import numpy as np
 
 from deep_sort.deep_sort import nn_matching
@@ -18,14 +17,14 @@ class DeepSort:
         model_path: str,
         max_cosine_distance: float = 0.7,
         nn_budget=None,
-        classes=['xeso', 'xega']
+        classes=["xeso", "xega"],
     ):
         self.encoder = gdet.create_box_encoder(model_path, batch_size=1)
         self.metric = nn_matching.NearestNeighborDistanceMetric(
             "cosine", max_cosine_distance, nn_budget
         )
         self.tracker = Tracker(self.metric)
-        
+
         # Reduce the max_age to 20
         self.tracker.max_age = 25
 
@@ -43,7 +42,9 @@ class DeepSort:
         features = self.encoder(origin_frame, bboxes)  # Generate features
         detections = [
             Detection(bbox, score, class_id, feature)
-            for bbox, score, class_id, feature in zip(bboxes, scores, class_ids, features)
+            for bbox, score, class_id, feature in zip(
+                bboxes, scores, class_ids, features
+            )
         ]
 
         self.tracker.predict()
@@ -59,9 +60,7 @@ class DeepSort:
             class_id = track.get_class()
             conf_score = track.get_conf_score()
             tracking_id = track.track_id
-            tracked_bboxes.append(
-                bbox.tolist() + [class_id, conf_score, tracking_id]
-            )
+            tracked_bboxes.append(bbox.tolist() + [class_id, conf_score, tracking_id])
 
         tracked_bboxes = np.array(tracked_bboxes)
 

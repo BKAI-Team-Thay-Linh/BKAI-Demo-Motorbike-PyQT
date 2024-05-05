@@ -1,4 +1,8 @@
-MOTOR_CLASSES = ["Xe Số", "Xe Ga", "N/A"]
+import os
+
+PLATFORM = "WIN" if os.name == "nt" else "UNIX"
+
+MOTOR_CLASSES = ["Xe So", "Xe Ga", "N/A"]
 
 # Color for drawing bounding boxes of detections
 COLOR = {

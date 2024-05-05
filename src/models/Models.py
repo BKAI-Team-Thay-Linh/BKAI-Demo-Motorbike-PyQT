@@ -1,10 +1,11 @@
 import os
 import sys
 
+import numpy as np
+
 sys.path.append(os.getcwd())  # NOQA
 
 import albumentations as A
-import numpy as np
 import polars as pl
 import torch
 from albumentations.pytorch import ToTensorV2

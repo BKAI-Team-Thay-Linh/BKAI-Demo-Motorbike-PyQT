@@ -10,3 +10,4 @@ timm
 polars
 transformers
 git+https://github.com/sberbank-ai/Real-ESRGAN.git
+imageio[ffmpeg]
