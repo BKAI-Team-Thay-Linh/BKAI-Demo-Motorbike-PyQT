@@ -31,6 +31,7 @@ def draw_bboxes(
         if class_id <= 2:
             color = const.COLOR[class_id]
             x1, y1, x2, y2 = bbox.astype(int)
+            print(x1, y1, x2, y2)
 
             # Draw rectangle on the image and the mask
             cv2.rectangle(

@@ -40,10 +40,27 @@ class DeepSort:
 
     def tracking(self, origin_frame, bboxes, scores, class_ids):
         features = self.encoder(origin_frame, bboxes)  # Generate features
+
+        # Here, the bounding boxes has already in format (x1, y1, x2, y2)
+        # But the deepsort requires the format (x1, y1, w, h)
+        # So, we need to convert the bounding boxes to the required format
+
+        bboxes_tlwh = np.array(
+            [
+                [
+                    bbox[0],
+                    bbox[1],
+                    bbox[2] - bbox[0],
+                    bbox[3] - bbox[1],
+                ]
+                for bbox in bboxes
+            ]
+        )
+
         detections = [
             Detection(bbox, score, class_id, feature)
             for bbox, score, class_id, feature in zip(
-                bboxes, scores, class_ids, features
+                bboxes_tlwh, scores, class_ids, features
             )
         ]
 

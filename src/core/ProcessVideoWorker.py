@@ -3,7 +3,6 @@ import os
 import shutil
 import subprocess
 import sys
-import uuid
 from datetime import datetime
 
 import numpy as np
@@ -92,15 +91,16 @@ class ProcessVideoWorker(QObject):
         class_ids = []
         for bbox in bboxes:
             x1, y1, x2, y2 = map(int, bbox)
+            # print(x1, y1, x2, y2)
 
             # Crop the frame
             cropped_img = img.crop((x1, y1, x2, y2))
             class_id = self.classifier.infer(cropped_img)
 
             # Save the cropped result to check
-            unique_name = str(uuid.uuid4())
-            os.makedirs(".temp/predicted_frames", exist_ok=True)
-            cv2.imwrite(f".temp/predicted_frames/{unique_name}_{class_id}.jpg", frame)
+            # unique_name = str(uuid.uuid4())
+            # os.makedirs(".temp/predicted_frames", exist_ok=True)
+            # cropped_img.save(f".temp/predicted_frames/{unique_name}_{class_id}.jpg")
 
             class_ids.append(class_id)
 
@@ -301,6 +301,8 @@ class ProcessVideoWorker(QObject):
 
     def run(self):
         self.started.emit()
+        shutil.rmtree(".temp", ignore_errors=True)
+        os.makedirs(".temp", exist_ok=True)
 
         ############# Define the video capture object and its properties #############
         cap = cv2.VideoCapture(self.video_path)
