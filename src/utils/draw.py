@@ -30,8 +30,8 @@ def draw_bboxes(
     for bbox, _, class_id, track_id in zip(bboxes, scores, class_ids, track_ids):
         if class_id <= 2:
             color = const.COLOR[class_id]
-            x1, y1, x2, y2 = bbox.astype(int)
-            print(x1, y1, x2, y2)
+            list_bbox = bbox.tolist()
+            x1, y1, x2, y2 = map(int, list_bbox)
 
             # Draw rectangle on the image and the mask
             cv2.rectangle(

@@ -287,17 +287,73 @@ class ProcessVideoWorker(QObject):
         )
 
         self.set_up_progress_bar.emit(len(output_frames))
-        for frame in output_frames:
+        for idx, frame in enumerate(output_frames):
+            print(f"Writing frame {idx} / {len(output_frames)}")
             self.increase_progress_bar.emit()
             out.write(frame)
-            cv2.imshow("Frame", frame)
-            c = cv2.waitKey(1)
-            if c & 0xFF == ord("q"):
-                break
         self.set_up_progress_bar.emit(0)
         out.release()
 
         return out_video_path
+
+    def _write_frames_to_video_ffmpeg(self, output_frames: list[np.ndarray]) -> str:
+        core_logger.info("Writing the frames to the video using FFmpeg ...")
+        self.logging.emit("Writing the frames to the video using FFmpeg ...", "blue")
+
+        # Save all the frames into a folder
+        os.makedirs(".temp/output_frames", exist_ok=True)
+
+        with ThreadPoolExecutor(max_workers=6) as executor:
+            futures = {
+                executor.submit(
+                    cv2.imwrite,
+                    f".temp/output_frames/image_{str(idx).zfill(8)}.jpg",
+                    frame,
+                ): f"image_{str(idx).zfill(8)}.jpg"
+                for idx, frame in enumerate(output_frames)
+            }
+
+            for idx, future in enumerate(as_completed(futures)):
+                print(f"Writing frame {idx} / {len(futures)}")
+                future.result()
+
+    def _merge_frames_to_video_ffmpeg(self) -> str:
+        # Write the frames to the video using FFmpeg
+        if const.PLATFORM == "WIN":
+            ffmpeg_path = os.path.join(
+                os.path.realpath("ffmpeg/bin/ffmpeg.exe"),
+            )
+        else:
+            ffmpeg_path = "ffmpeg"
+
+        shutil.rmtree(".temp/output_video", ignore_errors=True)
+        os.makedirs(".temp/output_video", exist_ok=True)
+
+        frames_path = os.path.realpath(".temp/output_frames")
+        output_video_name = (
+            os.path.basename(self.video_path).split(".")[0] + "_processed.mp4"
+        )
+        output_video_path = os.path.realpath(f".temp/output_video/{output_video_name}")
+
+        if const.PLATFORM == "WIN":
+            self.split_process = subprocess.Popen(
+                f"{ffmpeg_path} -i {frames_path}\image_%08d.jpg  -threads {self.sys_config['threads']} -r {self.fps} -c:v libx264 -pix_fmt yuv420p {output_video_path}",
+                creationflags=subprocess.CREATE_NEW_CONSOLE,
+            )
+        else:
+            self.split_process = subprocess.Popen(
+                f"{ffmpeg_path} -i {frames_path}/image_%08d.jpg  -threads {self.sys_config['threads']} -r {self.fps} -c:v libx264 -pix_fmt yuv420p {output_video_path}",
+                creationflags=subprocess.CREATE_NEW_CONSOLE,
+            )
+
+        counter = 1
+        while self.split_process.poll() is None:
+            if counter > 3:
+                counter = 1
+                print()
+            print(f"Waiting for the split process to finish {'. ' * counter}", end="\r")
+            time.sleep(1)
+            counter += 1
 
     def run(self):
         self.started.emit()
@@ -322,8 +378,18 @@ class ProcessVideoWorker(QObject):
         ############# Track detected objects #############
         output_frames = self._track_objects(output, new_class_ids)
 
-        ############# Write the frames to the video #############
-        out_path = self._write_frames_to_video(output_frames)
+        ############# Write the frames to temp folder #############
+        out_path = self._write_frames_to_video_ffmpeg(output_frames)
+
+        # Release memory
+        cap.release()
+        del cap
+        del output
+        del new_class_ids
+        del output_frames
+
+        ############# Merge the frames to video using FFmpeg #############
+        self._merge_frames_to_video_ffmpeg()
 
         self.logging.emit("Processing video has finished", "green")
 
@@ -334,7 +400,7 @@ if __name__ == "__main__":
     start_time = time.time()
 
     worker = ProcessVideoWorker(
-        video_path="assets/hoangcau.mp4",
+        video_path="assets/5min.mp4",
         sys_config=json.load(open("data/configs/system.json", "r", encoding="utf-8")),
         options={"light_enhance": False, "fog_dehaze": False},
         device="cuda",
@@ -344,4 +410,4 @@ if __name__ == "__main__":
 
     worker.run()
 
-    print(f"Time elapsed: {time.time() - start_time:.2f}s")
+    print(f"\nTime elapsed: {time.time() - start_time:.2f}s")
