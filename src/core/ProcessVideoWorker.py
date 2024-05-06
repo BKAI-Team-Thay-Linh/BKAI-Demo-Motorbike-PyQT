@@ -331,6 +331,8 @@ class ProcessVideoWorker(QObject):
 
 
 if __name__ == "__main__":
+    start_time = time.time()
+
     worker = ProcessVideoWorker(
         video_path="assets/hoangcau.mp4",
         sys_config=json.load(open("data/configs/system.json", "r", encoding="utf-8")),
@@ -341,3 +343,5 @@ if __name__ == "__main__":
     )
 
     worker.run()
+
+    print(f"Time elapsed: {time.time() - start_time:.2f}s")
