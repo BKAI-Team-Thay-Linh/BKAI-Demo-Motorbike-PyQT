@@ -1,9 +1,8 @@
 import os
 import sys
-sys.path.append(os.getcwd())  # NOQA
 
-import cv2
-import json
+sys.path.append(os.getcwd())
+
 import numpy as np
 
 from deep_sort.deep_sort import nn_matching
@@ -18,16 +17,16 @@ class DeepSort:
         model_path: str,
         max_cosine_distance: float = 0.7,
         nn_budget=None,
-        classes=['xeso', 'xega']
+        classes=["xeso", "xega"],
     ):
         self.encoder = gdet.create_box_encoder(model_path, batch_size=1)
         self.metric = nn_matching.NearestNeighborDistanceMetric(
             "cosine", max_cosine_distance, nn_budget
         )
         self.tracker = Tracker(self.metric)
-        
+
         # Reduce the max_age to 20
-        self.tracker.max_age = 25
+        self.tracker.max_age = 20
 
         key_list = []  # list of keys
         val_list = []  # list of values
@@ -41,9 +40,28 @@ class DeepSort:
 
     def tracking(self, origin_frame, bboxes, scores, class_ids):
         features = self.encoder(origin_frame, bboxes)  # Generate features
+
+        # Here, the bounding boxes has already in format (x1, y1, x2, y2)
+        # But the deepsort requires the format (x1, y1, w, h)
+        # So, we need to convert the bounding boxes to the required format
+
+        bboxes_tlwh = np.array(
+            [
+                [
+                    bbox[0],
+                    bbox[1],
+                    bbox[2] - bbox[0],
+                    bbox[3] - bbox[1],
+                ]
+                for bbox in bboxes
+            ]
+        )
+
         detections = [
             Detection(bbox, score, class_id, feature)
-            for bbox, score, class_id, feature in zip(bboxes, scores, class_ids, features)
+            for bbox, score, class_id, feature in zip(
+                bboxes_tlwh, scores, class_ids, features
+            )
         ]
 
         self.tracker.predict()
@@ -51,17 +69,15 @@ class DeepSort:
 
         tracked_bboxes = []
         for track in self.tracker.tracks:
-            # If track is confirmed and has been detected for at least 5 frames, draw and label the bounding box
-            if not track.is_confirmed() or track.time_since_update > 5:
+            # If track is not confirmed or it's has been 8 frames since its last update, skip
+            if not track.is_confirmed() or track.time_since_update > 8:
                 continue
 
             bbox = track.to_tlbr()  # Get the corrected/predicted bounding box
             class_id = track.get_class()
             conf_score = track.get_conf_score()
             tracking_id = track.track_id
-            tracked_bboxes.append(
-                bbox.tolist() + [class_id, conf_score, tracking_id]
-            )
+            tracked_bboxes.append(bbox.tolist() + [class_id, conf_score, tracking_id])
 
         tracked_bboxes = np.array(tracked_bboxes)
 

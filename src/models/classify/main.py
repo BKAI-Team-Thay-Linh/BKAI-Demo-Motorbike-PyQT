@@ -1,17 +1,18 @@
 import os
 import sys
 
+import numpy as np
+
 sys.path.append(os.getcwd())  # NOQA
 
 import albumentations as A
-import numpy as np
-import polars as pl
 import torch
 from albumentations.pytorch import ToTensorV2
 from PIL import Image
 
 from src.models import models_logger
-from src.models.ResNet18 import ResNet18
+from src.models.classify.resnet18 import ResNet18
+from src.models.classify.vit import ViTBase
 
 
 class Transform:
@@ -27,10 +28,11 @@ class Models(torch.nn.Module):
         super(Models, self).__init__()
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-        models_logger.info(f"Using device: {self.device}")
-
         if model == "resnet18":
             self.model = ResNet18(num_classes=num_classes).to(self.device)
+        elif model == "vit":
+            self.model = ViTBase(num_classes=num_classes).to(self.device)
+
         self.eval()
 
     def forward(self, x):
@@ -39,7 +41,6 @@ class Models(torch.nn.Module):
     def load_weight(self, weight_path: str):
         checkpoint = torch.load(weight_path, map_location=self.device)
         self.load_state_dict(checkpoint["state_dict"], strict=False)
-
         models_logger.info(f"Weight has been loaded from {weight_path}")
 
     def infer(self, image: Image) -> int:
@@ -51,23 +52,23 @@ class Models(torch.nn.Module):
 
         return torch.argmax(pred, dim=1).item()
 
+    @property
+    def name(self):
+        return self.model.__class__.__name__
+
 
 if __name__ == "__main__":
-    model = Models()
-    model.load_weight("weight/resnet18.ckpt")
+    model = Models(model="vit")
+    model.load_weight("weight/classify/ViT.ckpt")
 
     output = []
 
-    for img_name in os.listdir(".temp"):
-        img_path = f".temp/{img_name}"
+    for img_name in os.listdir(".temp/extracted_frames"):
+        img_path = ".temp/Screenshot 2024-05-07 194615.png"
         img = Image.open(img_path)
 
         result = model.infer(img)
 
-        print(f"Image: {img_name}, Prediction: result")
+        print(f"Image: {img_name}, Prediction: {result}")
 
         output.append({"image": img_name, "prediction": result})
-
-    df = pl.DataFrame(output)
-
-    df.write_csv("output.csv")
