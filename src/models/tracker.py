@@ -26,7 +26,7 @@ class DeepSort:
         self.tracker = Tracker(self.metric)
 
         # Reduce the max_age to 20
-        self.tracker.max_age = 25
+        self.tracker.max_age = 20
 
         key_list = []  # list of keys
         val_list = []  # list of values
@@ -69,8 +69,8 @@ class DeepSort:
 
         tracked_bboxes = []
         for track in self.tracker.tracks:
-            # If track is confirmed and has been detected for at least 5 frames, draw and label the bounding box
-            if not track.is_confirmed() or track.time_since_update > 5:
+            # If track is not confirmed or it's has been 8 frames since its last update, skip
+            if not track.is_confirmed() or track.time_since_update > 8:
                 continue
 
             bbox = track.to_tlbr()  # Get the corrected/predicted bounding box

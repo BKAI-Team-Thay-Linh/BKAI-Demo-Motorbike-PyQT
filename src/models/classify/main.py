@@ -6,14 +6,13 @@ import numpy as np
 sys.path.append(os.getcwd())  # NOQA
 
 import albumentations as A
-import polars as pl
 import torch
 from albumentations.pytorch import ToTensorV2
 from PIL import Image
 
 from src.models import models_logger
-from src.models.ResNet18 import ResNet18
-from src.models.ViT import ViTBase
+from src.models.classify.resnet18 import ResNet18
+from src.models.classify.vit import ViTBase
 
 
 class Transform:
@@ -59,13 +58,13 @@ class Models(torch.nn.Module):
 
 
 if __name__ == "__main__":
-    model = Models()
-    model.load_weight("weight/classify/resnet18.ckpt")
+    model = Models(model="vit")
+    model.load_weight("weight/classify/ViT.ckpt")
 
     output = []
 
-    for img_name in os.listdir(".temp"):
-        img_path = f".temp/{img_name}"
+    for img_name in os.listdir(".temp/extracted_frames"):
+        img_path = ".temp/Screenshot 2024-05-07 194615.png"
         img = Image.open(img_path)
 
         result = model.infer(img)
@@ -73,7 +72,3 @@ if __name__ == "__main__":
         print(f"Image: {img_name}, Prediction: {result}")
 
         output.append({"image": img_name, "prediction": result})
-
-    df = pl.DataFrame(output)
-
-    df.write_csv("output.csv")

@@ -6,9 +6,13 @@ import torch
 
 sys.path.append(os.getcwd())  # NOQA
 
-from PyQt6.QtCore import QDateTime, QThread
-from PyQt6.QtWidgets import QFileDialog, QMainWindow, QMessageBox
+from PyQt6.QtCore import QDateTime, QThread, QUrl
+from PyQt6.QtGui import QShortcut
+from PyQt6.QtMultimedia import QMediaPlayer
+from PyQt6.QtMultimediaWidgets import QVideoWidget
+from PyQt6.QtWidgets import QFileDialog, QMainWindow, QMessageBox, QStyle
 
+from src.core import core_logger
 from src.core.ProcessVideoWorker import ProcessVideoWorker
 from src.gui import gui_logger
 from src.gui.MessageBox import MessageBox as msg
@@ -22,6 +26,7 @@ class HomeGUI(QMainWindow):
         self.home_ui = Ui_HomePage()
         self.home_ui.setupUi(self)
         self._load_configs()
+        self._init_media_player()
 
         # Connect event
         self.home_ui.input_button.clicked.connect(self.choose_input_video)
@@ -34,6 +39,25 @@ class HomeGUI(QMainWindow):
         self.process_video_thread = QThread()
 
     """Utils functions"""
+
+    def _init_media_player(self):
+        self.media_player = QMediaPlayer(None)
+        self.video_widget = QVideoWidget(parent=self.home_ui.media_widget)
+
+        self.video_widget.setFixedSize(self.home_ui.media_widget.size())
+
+        self.media_player.setVideoOutput(self.video_widget)
+        self.video_widget.show()
+
+        self.home_ui.play_video_button.setIcon(
+            self.style().standardIcon(QStyle.StandardPixmap.SP_MediaPlay)
+        )
+
+        self.home_ui.horizontalSlider.setRange(0, 0)
+
+        # Add shortcut for full screen
+        QShortcut("F", self.video_widget, self._full_screen_event)
+        QShortcut("Space", self.video_widget, self._play_video)
 
     def _load_configs(self):
         with open("data/configs/system.json", "r", encoding="utf-8") as file:
@@ -91,14 +115,19 @@ class HomeGUI(QMainWindow):
             self.home_ui.log_area.verticalScrollBar().maximum()
         )
 
-    def _handle_success(self, output_video_path: str):
+    def _handle_success(self, summary_report: str):
+        video_name = os.listdir(".temp/output_video")[0]
+
         msg.information_box_with_button(
-            content=f"Video has successfully saved to path: {output_video_path}",
-            button_name="Open Folder",
-            button_action=lambda: os.startfile(os.path.dirname(output_video_path)),
+            content=summary_report,
+            button_name="Preview",
+            button_action=lambda: self._start_player(
+                f".temp/output_video/{video_name}"
+            ),
         )
 
         # Stop the progress bar
+        self.home_ui.progressBar.setValue(0)
         self.home_ui.progressBar.reset()
 
     def _set_up_progress_bar(self, total: int):
@@ -144,8 +173,57 @@ class HomeGUI(QMainWindow):
 
     """Media Player"""
 
-    def _start_player(self):
-        pass
+    def _full_screen_event(self):
+        if self.video_widget.isFullScreen():
+            self.video_widget.setFullScreen(False)
+        else:
+            self.video_widget.setFullScreen(True)
+
+    def _media_playback_duration_changed(self, duration):
+        self.max_video_duration = duration
+        self.home_ui.duration_label.setText(f"0:/{duration}s")
+        self.home_ui.horizontalSlider.setRange(0, duration)
+
+    def _media_playback_position_changed(self, position):
+        self.home_ui.duration_label.setText(
+            f"{round(position/1000, 2)}/{round(self.max_video_duration/1000, 2)}s"
+        )
+        self.home_ui.horizontalSlider.setValue(position)
+
+    def _media_playback_state_changed(self, state):
+        if state == QMediaPlayer.PlaybackState.PlayingState:
+            self.home_ui.play_video_button.setIcon(
+                self.style().standardIcon(QStyle.StandardPixmap.SP_MediaPause)
+            )
+        else:
+            self.home_ui.play_video_button.setIcon(
+                self.style().standardIcon(QStyle.StandardPixmap.SP_MediaPlay)
+            )
+
+    def _play_video(self):
+        print(self.media_player.playbackState())
+        if self.media_player.playbackState() == QMediaPlayer.PlaybackState.PausedState:
+            self.media_player.play()
+            core_logger.info("Video Played")
+        else:
+            self.media_player.pause()
+            core_logger.info("Video Paused")
+
+    def _start_player(self, video_path: str):
+        # Play the video in the media widget
+        self.media_player.setSource(QUrl.fromLocalFile(video_path))
+        self.home_ui.play_video_button.clicked.connect(self._play_video)
+        self.home_ui.horizontalSlider.sliderMoved.connect(self.media_player.setPosition)
+        self.media_player.durationChanged.connect(self._media_playback_duration_changed)
+        self.media_player.positionChanged.connect(self._media_playback_position_changed)
+        self.media_player.playbackStateChanged.connect(
+            self._media_playback_state_changed
+        )
+
+        self.home_ui.zoom_button.clicked.connect(self._full_screen_event)
+
+        # Play the video
+        self.media_player.play()
 
     """Models Choosing Functions"""
 

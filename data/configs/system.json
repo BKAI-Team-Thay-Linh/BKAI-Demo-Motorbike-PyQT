@@ -4,5 +4,5 @@
     "deepsort_model_path": "weight/tracking/deepsort/mars-small128.pb",
     "real_esrgan_weight_path": "weight/super_resolution/RealESRGAN_x2.pth",
     "exposure_weight_path": "weight/lighting/best_epoch_exposure.pth",
-    "threads": 10
+    "threads": 16
 }

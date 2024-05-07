@@ -3,7 +3,6 @@ import os
 import shutil
 import subprocess
 import sys
-from datetime import datetime
 
 import numpy as np
 
@@ -18,8 +17,8 @@ from PyQt6.QtCore import QObject, pyqtSignal
 
 import src.utils.constants as const
 from src.core import core_logger
+from src.models.classify.main import Models
 from src.models.detector import YoloDectector
-from src.models.Models import Models
 from src.models.tracker import DeepSort
 from src.utils.draw import draw_bboxes
 
@@ -179,8 +178,8 @@ class ProcessVideoWorker(QObject):
         output = []
         self.set_up_progress_bar.emit(len(os.listdir(self.TEMP_FOLDER_EXTRACT)))
         for idx, image_name in enumerate(os.listdir(self.TEMP_FOLDER_EXTRACT)):
-            self.logging.emit(f"Detecting objects in the frame {image_name}", "black")
-            print(f"Detecting objects in the frame {image_name}")
+            # self.logging.emit(f"Detecting objects in the frame {image_name}", "black")
+            print(f"Detecting objects in the frame {image_name}", end="\r")
             self.increase_progress_bar.emit()
 
             # Read the frame
@@ -190,6 +189,7 @@ class ProcessVideoWorker(QObject):
                 conf=self.detect_conf, frame=frame
             )
             output.append((idx, bboxes, scores, class_ids, frame))
+        print()
         self.set_up_progress_bar.emit(0)
 
         output.sort(key=lambda x: x[0])
@@ -205,16 +205,20 @@ class ProcessVideoWorker(QObject):
         class_ids = []
 
         # Try with ThreadPoolExecutor
-        with ThreadPoolExecutor(max_workers=4) as executor:
+        with ThreadPoolExecutor(max_workers=6) as executor:
             futures = {
                 executor.submit(self.__classify, bboxes, frame): (bboxes, frame)
                 for idx, (bboxes, _, _, frame) in enumerate(output)
             }
 
+            self.set_up_progress_bar.emit(len(futures))
             for idx, future in enumerate(as_completed(futures)):
+                self.increase_progress_bar.emit()
                 print(f"Classifying frame {idx} / {len(futures)}")
                 bboxes, frame = futures[future]
                 class_ids.append(future.result())
+
+            self.set_up_progress_bar.emit(0)
 
         print(class_ids[:5])
 
@@ -268,34 +272,6 @@ class ProcessVideoWorker(QObject):
 
         return output_frames
 
-    def _write_frames_to_video(self, output_frames: list[np.ndarray]) -> str:
-        core_logger.info("Writing the frames to the video ...")
-        self.logging.emit("Writing the frames to the video ...", "blue")
-
-        fourcc = cv2.VideoWriter_fourcc(*"H264")
-
-        old_video_name = os.path.basename(self.video_path)
-        time_now = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-        out_video_name = old_video_name.split(".")[0] + f"_processed_{time_now}.mp4"
-
-        # Temporary save it to TEMP_FOLDER_SAVE_VIDEO
-        os.makedirs(self.TEMP_FOLDER_SAVE_VIDEO, exist_ok=True)
-        out_video_path = os.path.join(self.TEMP_FOLDER_SAVE_VIDEO, out_video_name)
-
-        out = cv2.VideoWriter(
-            out_video_path, fourcc, self.fps, (self.width, self.height)
-        )
-
-        self.set_up_progress_bar.emit(len(output_frames))
-        for idx, frame in enumerate(output_frames):
-            print(f"Writing frame {idx} / {len(output_frames)}")
-            self.increase_progress_bar.emit()
-            out.write(frame)
-        self.set_up_progress_bar.emit(0)
-        out.release()
-
-        return out_video_path
-
     def _write_frames_to_video_ffmpeg(self, output_frames: list[np.ndarray]) -> str:
         core_logger.info("Writing the frames to the video using FFmpeg ...")
         self.logging.emit("Writing the frames to the video using FFmpeg ...", "blue")
@@ -313,7 +289,9 @@ class ProcessVideoWorker(QObject):
                 for idx, frame in enumerate(output_frames)
             }
 
+            self.set_up_progress_bar.emit(len(futures))
             for idx, future in enumerate(as_completed(futures)):
+                self.increase_progress_bar.emit()
                 print(f"Writing frame {idx} / {len(futures)}")
                 future.result()
 
@@ -360,6 +338,7 @@ class ProcessVideoWorker(QObject):
         shutil.rmtree(".temp", ignore_errors=True)
         os.makedirs(".temp", exist_ok=True)
 
+        start_time = time.time()
         ############# Define the video capture object and its properties #############
         cap = cv2.VideoCapture(self.video_path)
         self.width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
@@ -370,16 +349,22 @@ class ProcessVideoWorker(QObject):
         self._split_video_into_frames(video_path=self.video_path, fps=self.fps)
 
         ############# Detect bboxes #############
+        detect_start_time = time.time()
         output = self._detect_bboxes()
+        detect_elapsed_time = time.time() - detect_start_time
 
         ############# Classify detected objects #############
+        classifying_start_time = time.time()
         new_class_ids = self._classify_frames(output)
+        classify_elapsed_time = time.time() - classifying_start_time
 
         ############# Track detected objects #############
+        tracking_start_time = time.time()
         output_frames = self._track_objects(output, new_class_ids)
+        tracking_elapsed_time = time.time() - tracking_start_time
 
         ############# Write the frames to temp folder #############
-        out_path = self._write_frames_to_video_ffmpeg(output_frames)
+        self._write_frames_to_video_ffmpeg(output_frames)
 
         # Release memory
         cap.release()
@@ -391,9 +376,18 @@ class ProcessVideoWorker(QObject):
         ############# Merge the frames to video using FFmpeg #############
         self._merge_frames_to_video_ffmpeg()
 
+        total_elapsed_time = time.time() - start_time
         self.logging.emit("Processing video has finished", "green")
 
-        self.finished.emit(out_path)
+        summary_report = f"""
+Summary Report:
+    - Detecting objects: {detect_elapsed_time:.2f}s
+    - Classifying objects: {classify_elapsed_time:.2f}s
+    - Tracking objects: {tracking_elapsed_time:.2f}s
+    - Total time elapsed: {total_elapsed_time:.2f}s
+        """
+
+        self.finished.emit(summary_report)
 
 
 if __name__ == "__main__":
