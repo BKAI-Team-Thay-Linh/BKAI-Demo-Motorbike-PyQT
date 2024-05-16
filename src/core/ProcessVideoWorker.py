@@ -61,6 +61,7 @@ class ProcessVideoWorker(QObject):
         self.detector = YoloDectector(
             model_path=self.detection_weight_path,
             device=self.device,
+            will_classify=False,
         )
         self.tracker = DeepSort(
             model_path=sys_config["deepsort_model_path"],
@@ -185,10 +186,8 @@ class ProcessVideoWorker(QObject):
             # Read the frame
             image_path = os.path.join(self.TEMP_FOLDER_EXTRACT, image_name)
             frame = cv2.imread(image_path)
-            bboxes, scores, class_ids = self.detector.detect(
-                conf=self.detect_conf, frame=frame
-            )
-            output.append((idx, bboxes, scores, class_ids, frame))
+            bboxes, scores = self.detector.detect(conf=self.detect_conf, frame=frame)
+            output.append((idx, bboxes, scores, [], frame))
         print()
         self.set_up_progress_bar.emit(0)
 
